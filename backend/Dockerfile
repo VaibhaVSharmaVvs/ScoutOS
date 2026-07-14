@@ -6,8 +6,8 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Install deps first for layer caching
 COPY pyproject.toml ./
+COPY app ./app
 RUN pip install --upgrade pip && pip install ".[dev]"
 
 COPY . .
