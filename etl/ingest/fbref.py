@@ -14,8 +14,6 @@ from __future__ import annotations
 
 import time
 
-import soccerdata as sd
-
 from etl.config import (
     BIG5_LEAGUES,
     DEFAULT_SEASONS,
@@ -24,6 +22,7 @@ from etl.config import (
     REQUEST_DELAY_SECONDS,
     SOURCE_DIRS,
 )
+from etl.ingest._fbref_patch import FBrefExtended
 from etl.ingest.base import Artifact, Manifest, log, rel, save_parquet, utcnow_iso
 
 SOURCE = "fbref"
@@ -45,7 +44,7 @@ def run(
     cache_dir = SOURCE_DIRS[SOURCE] / "_cache"
     # proxy: e.g. "http://user:pass@host:port" or "tor" (needs Tor on :9050).
     # FBref is behind Cloudflare; a residential proxy or Tor avoids IP blocks.
-    fb = sd.FBref(leagues=leagues, seasons=seasons, data_dir=cache_dir, proxy=proxy)
+    fb = FBrefExtended(leagues=leagues, seasons=seasons, data_dir=cache_dir, proxy=proxy)
     manifest = Manifest()
 
     log.info("FBref: %d leagues x %d seasons", len(leagues), len(seasons))

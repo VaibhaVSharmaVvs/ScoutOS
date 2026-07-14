@@ -42,26 +42,38 @@ BIG5_LEAGUES = [
 DEFAULT_SEASONS = ["2021", "2122", "2223", "2324", "2425"]
 
 # --- FBref -------------------------------------------------------------------
-# NOTE: soccerdata 1.9.0 only supports these 5 stat types at SEASON level
-# (read_(player|team)_season_stats). Detailed categories that exist on FBref
-# itself — passing, passing_types, goal_shot_creation, defense, possession,
-# keeper_adv — are NOT exposed at season level here; they would require
-# read_player_match_stats aggregation (Phase 3 follow-up). Invalid names raise
-# TypeError, so keep this list to exactly what the library accepts.
+# soccerdata 1.9.0 ships a working (Cloudflare-bypassing) parser but restricts
+# season stats to {standard, shooting, playing_time, misc, keeper}. Its code
+# path is generic (page=stat_type, table id=stats_{stat_type}), so widening the
+# gate recovers the detailed categories — see etl/ingest/_fbref_patch.py, which
+# is what FBrefExtended uses. Names below are FBref's native page slugs:
+#   gca = goal & shot creation. (keeper_adv omitted: needs a different slug.)
+# These detailed stats (tackles, interceptions, progressive passes/carries,
+# passing accuracy, shot creation) are required for the position & similarity
+# models per the proposal's Feature Engineering section.
 FBREF_PLAYER_STAT_TYPES = [
     "standard",
     "shooting",
+    "passing",
+    "passing_types",
+    "gca",
+    "defense",
+    "possession",
     "playing_time",
     "misc",
     "keeper",
 ]
 
+# Team-level: only these parse cleanly. FBref serves the detailed team tables
+# (passing/passing_types/gca/defense/possession) inside HTML comments, and
+# soccerdata's read_team_season_stats does not un-comment them (unlike the
+# player path), so they raise "not enough values to unpack". Deferred: team
+# tactical profiles (Phase 4.5 Club Fit) are instead aggregated from the
+# player-level detailed stats, which we have in full.
 FBREF_TEAM_STAT_TYPES = [
     "standard",
     "shooting",
-    "playing_time",
     "misc",
-    "keeper",
 ]
 
 # --- Throttling ---------------------------------------------------------------
