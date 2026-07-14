@@ -53,3 +53,7 @@ Thumbs.db
 
 # --- Docker ---
 *.pid
+
+# --- soccerdata / browser scraping artifacts ---
+downloaded_files/
+*.lock
