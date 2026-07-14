@@ -12,13 +12,14 @@ from __future__ import annotations
 import argparse
 
 from etl.config import BIG5_LEAGUES, DEFAULT_SEASONS
-from etl.ingest import fbref, statsbomb, transfermarkt, understat
+from etl.ingest import clubelo, fbref, statsbomb, transfermarkt, understat
 
 SOURCES = {
     "fbref": fbref.run,
     "understat": understat.run,
     "statsbomb": statsbomb.run,
     "transfermarkt": transfermarkt.run,
+    "clubelo": clubelo.run,
 }
 
 
@@ -77,6 +78,8 @@ def main() -> None:
             statsbomb.run(with_events=args.with_events, force=args.force)
         elif name == "transfermarkt":
             transfermarkt.run(force=args.force)
+        elif name == "clubelo":
+            clubelo.run(proxy=args.proxy, force=args.force)
 
 
 if __name__ == "__main__":
