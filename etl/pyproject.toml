@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Scout OS — data ingestion & ETL pipeline"
 requires-python = ">=3.11"
 dependencies = [
-    "soccerdata>=1.8",
+    "soccerdata==1.9.0",  # pinned: working parser; we widen the season stat-type gate (see _fbref_patch.py)
     "statsbombpy>=1.14",
     "pandas>=2.2",
     "pyarrow>=17.0",
