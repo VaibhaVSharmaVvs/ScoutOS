@@ -22,6 +22,7 @@ SOURCE_DIRS = {
     "understat": RAW_DIR / "understat",
     "statsbomb": RAW_DIR / "statsbomb",
     "transfermarkt": RAW_DIR / "transfermarkt",
+    "clubelo": RAW_DIR / "clubelo",
 }
 
 MANIFEST_PATH = RAW_DIR / "manifest.json"
@@ -84,3 +85,15 @@ REQUEST_DELAY_SECONDS = float(os.getenv("SCOUTOS_REQUEST_DELAY", "2"))
 # --- Transfermarkt ------------------------------------------------------------
 # Kaggle dataset providing player market values & transfer history.
 TRANSFERMARKT_KAGGLE_DATASET = "davidcariboo/player-scores"
+
+# --- ClubElo ------------------------------------------------------------------
+# Club strength (Elo) snapshots. One per season end (approx). ClubElo returns
+# all clubs globally on a date, so this covers every league we touch. Used as
+# the "club strength" feature (value model) and in the Club Fit engine.
+CLUBELO_SNAPSHOT_DATES = [
+    "2021-06-01",
+    "2022-06-01",
+    "2023-06-01",
+    "2024-06-01",
+    "2025-06-01",
+]
