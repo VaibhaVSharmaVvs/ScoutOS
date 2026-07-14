@@ -64,15 +64,15 @@ FBREF_PLAYER_STAT_TYPES = [
     "keeper",
 ]
 
-# Team tactical profile inputs (outfield-relevant categories).
+# Team-level: only these parse cleanly. FBref serves the detailed team tables
+# (passing/passing_types/gca/defense/possession) inside HTML comments, and
+# soccerdata's read_team_season_stats does not un-comment them (unlike the
+# player path), so they raise "not enough values to unpack". Deferred: team
+# tactical profiles (Phase 4.5 Club Fit) are instead aggregated from the
+# player-level detailed stats, which we have in full.
 FBREF_TEAM_STAT_TYPES = [
     "standard",
     "shooting",
-    "passing",
-    "passing_types",
-    "gca",
-    "defense",
-    "possession",
     "misc",
 ]
 
