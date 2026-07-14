@@ -15,6 +15,22 @@ from pathlib import Path
 
 import pandas as pd
 
+
+def _stringify_cell(v: object) -> object:
+    """Coerce a value pyarrow can't type-infer into a stable string.
+
+    Preserves None/NaN; JSON-encodes lists/dicts; str()'s everything else.
+    Used only as a fallback when a column has mixed/unsupported types so raw
+    data is preserved losslessly as text for downstream parsing.
+    """
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return None
+    if isinstance(v, str):
+        return v
+    if isinstance(v, (list, dict)):
+        return json.dumps(v, default=str, ensure_ascii=False)
+    return str(v)
+
 from etl.config import MANIFEST_PATH, RAW_DIR
 
 logging.basicConfig(
@@ -99,6 +115,12 @@ def save_parquet(df: pd.DataFrame, path: Path) -> int:
         out.columns = ["_".join(str(c) for c in col if c != "").strip("_") for col in out.columns]
     out = out.reset_index()
     tmp = path.with_suffix(".parquet.tmp")
-    out.to_parquet(tmp, index=False)
+    try:
+        out.to_parquet(tmp, index=False)
+    except Exception:  # noqa: BLE001 - retry once with object cols stringified
+        for col in out.columns:
+            if out[col].dtype == object:
+                out[col] = out[col].map(_stringify_cell)
+        out.to_parquet(tmp, index=False)
     tmp.replace(path)
     return len(out)
