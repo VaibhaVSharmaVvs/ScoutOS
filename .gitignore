@@ -1,0 +1,52 @@
+# --- Data (PII + large; never commit) ---
+data/raw/
+data/staging/
+data/processed/
+*.parquet
+*.csv
+!**/fixtures/*.csv
+
+# --- ML artifacts ---
+ml/models/
+*.pt
+*.pth
+*.pkl
+*.joblib
+*.faiss
+*.index
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.env
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Node / Frontend ---
+node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+yarn-error.log*
+
+# --- Secrets / env ---
+.env
+.env.local
+*.local
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+*.pid

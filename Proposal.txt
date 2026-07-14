@@ -1,0 +1,368 @@
+Scout OS (Football Scout AI) — Proposed Development Plan
+🎯 Vision
+
+Build an AI-powered football scouting platform that combines data engineering, machine learning, backend development, and LLMs to analyze any professional football player.
+
+The system will answer questions such as:
+
+Which position suits this player best?
+Which clubs are the best tactical fit?
+Which famous players are most similar?
+What is their fair market value?
+How will they develop over the next five years?
+Why are these predictions being made?
+
+The goal is to create a project that resembles a real scouting platform rather than a simple ML demo.
+
+Overall Architecture
+Football Data Sources
+(FBref, StatsBomb, Understat, Transfermarkt)
+
+                │
+                ▼
+
+        ETL Pipeline (Python)
+
+                │
+                ▼
+
+        PostgreSQL Database
+        (Single Source of Truth)
+
+        ┌──────────────┐
+        │              │
+        ▼              ▼
+
+ Feature Engineering   FastAPI Backend
+
+        │              │
+        ▼              ▼
+
+    ML Models      React Frontend
+
+        │
+        ▼
+
+LLM Explanation Layer
+
+The application should own its data rather than depending on external APIs for every request.
+
+Data Pipeline
+Initial Import
+
+Download historical football data covering approximately:
+
+Top European leagues
+Champions League
+Europa League
+5–10 previous seasons
+
+Raw data should remain untouched.
+
+raw/
+
+fbref/
+
+statsbomb/
+
+understat/
+ETL
+
+Transform raw data into a normalized PostgreSQL database.
+
+Example tables:
+
+Players
+Clubs
+Seasons
+Player Statistics
+Market Values
+Transfer History
+Team Tactical Profiles
+
+This database becomes the source for both the backend and machine learning.
+
+Updating Data
+
+Rather than requesting live data every search:
+
+Weekly scheduled ETL
+
+Download latest data
+
+↓
+
+Update PostgreSQL
+
+↓
+
+(Optional)
+
+Retrain ML models
+
+↓
+
+Deploy
+
+Only live information such as fixtures or injuries should come from external APIs.
+
+Feature Engineering
+
+Convert raw statistics into meaningful features.
+
+Examples
+
+Goals per 90
+xG per 90
+Progressive Passes
+Progressive Carries
+Pressures
+Tackles
+Interceptions
+Passing %
+Dribble Success %
+Aerial Win %
+Position Percentiles
+League Percentiles
+
+Normalize all numerical features before training.
+
+Machine Learning Models
+1. Player Similarity
+
+Purpose
+
+Find footballers with comparable playing styles.
+
+Model
+
+Autoencoder (PyTorch) → Player embeddings
+FAISS / Nearest Neighbors for similarity search
+
+Output
+
+Most similar players
+Similarity score
+2. Market Value Prediction
+
+Purpose
+
+Predict realistic transfer value.
+
+Model
+
+LightGBM or XGBoost Regression
+
+Features
+
+Age
+League
+Minutes
+Performance statistics
+International appearances
+Position
+Club strength
+
+Evaluation
+
+MAE
+RMSE
+SHAP Explainability
+3. Position Prediction
+
+Purpose
+
+Predict optimal playing position from statistical profile.
+
+Model
+
+CatBoost Classifier
+
+Output
+
+Examples
+
+CAM
+LW
+CM
+CDM
+ST
+4. Potential Growth
+
+Purpose
+
+Estimate player development over:
+
+1 year
+3 years
+5 years
+
+Model
+
+LightGBM Regression
+
+Output
+
+Projected market value and performance growth.
+
+5. Club Fit Engine
+
+Purpose
+
+Determine how well a player fits a club.
+
+Instead of ML, use a weighted scoring system.
+
+Factors
+
+Tactical profile
+Age profile
+Financial feasibility
+Squad requirements
+League suitability
+
+Output
+
+Tactical Fit
+Financial Fit
+Squad Fit
+Overall Fit Score
+LLM Layer
+
+The LLM should never make predictions.
+
+Instead it explains predictions already produced by the models.
+
+Example input
+
+Player Statistics
+
+↓
+
+Similarity Model
+
+↓
+
+Position Prediction
+
+↓
+
+Club Fit Scores
+
+↓
+
+Market Value Prediction
+
+↓
+
+LLM
+
+Example output
+
+"Musiala is an excellent fit for Liverpool because his progressive carrying, chance creation and pressing intensity closely match the tactical requirements of their attacking midfield role."
+
+Backend (FastAPI)
+
+Responsibilities
+
+Player Search
+Prediction APIs
+Similarity Search
+Squad Analysis
+Career Simulation
+Authentication
+Redis Caching
+
+Example endpoints
+
+/search
+
+/player/{id}
+
+/similar
+
+/predict/value
+
+/predict/position
+
+/predict/potential
+
+/club-fit
+
+/squad-analysis
+
+/career-simulation
+Frontend (React)
+
+Pages
+
+Home
+Player Search
+Trending Players
+Featured Analysis
+Player Profile
+Player information
+Radar chart
+Heatmap
+Strengths
+Weaknesses
+Market value history
+Similar Players
+
+Cards showing
+
+Similarity %
+Playing style
+Market value
+Club Finder
+
+Select a club
+
+Receive
+
+Tactical Fit
+Financial Fit
+Overall Recommendation
+Squad Analyzer
+
+Upload squad
+
+Receive
+
+Weak positions
+Tactical imbalance
+Transfer recommendations
+Career Simulator
+
+"What if Haaland joined Barcelona?"
+
+Model predicts
+
+Goals
+Assists
+Market Value
+Team Chemistry
+Deployment Architecture
+GitHub
+
+↓
+
+GitHub Actions
+
+↓
+
+Docker
+
+↓
+
+Render
+
+↓
+
+Cloudflare
+
+Redis caches frequently accessed players.
+
+PostgreSQL stores all processed football data.
+
+ML models are loaded by FastAPI.
