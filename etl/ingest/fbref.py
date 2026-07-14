@@ -34,6 +34,7 @@ def run(
     leagues: list[str] | None = None,
     player_stat_types: list[str] | None = None,
     team_stat_types: list[str] | None = None,
+    proxy: str | None = None,
     force: bool = False,
 ) -> None:
     seasons = seasons or DEFAULT_SEASONS
@@ -42,7 +43,9 @@ def run(
     team_stat_types = team_stat_types or FBREF_TEAM_STAT_TYPES
 
     cache_dir = SOURCE_DIRS[SOURCE] / "_cache"
-    fb = sd.FBref(leagues=leagues, seasons=seasons, data_dir=cache_dir)
+    # proxy: e.g. "http://user:pass@host:port" or "tor" (needs Tor on :9050).
+    # FBref is behind Cloudflare; a residential proxy or Tor avoids IP blocks.
+    fb = sd.FBref(leagues=leagues, seasons=seasons, data_dir=cache_dir, proxy=proxy)
     manifest = Manifest()
 
     log.info("FBref: %d leagues x %d seasons", len(leagues), len(seasons))

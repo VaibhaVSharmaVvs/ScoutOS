@@ -48,6 +48,12 @@ def main() -> None:
         help="StatsBomb: also download event data (large).",
     )
     parser.add_argument(
+        "--proxy",
+        default=None,
+        help='Proxy for FBref/Understat, e.g. "http://user:pass@host:port" or '
+        '"tor". Use to bypass FBref Cloudflare IP blocks.',
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="Re-download even if present in the manifest.",
@@ -58,9 +64,15 @@ def main() -> None:
 
     for name in targets:
         if name == "fbref":
-            fbref.run(seasons=args.seasons, leagues=args.leagues, force=args.force)
+            fbref.run(
+                seasons=args.seasons, leagues=args.leagues,
+                proxy=args.proxy, force=args.force,
+            )
         elif name == "understat":
-            understat.run(seasons=args.seasons, leagues=args.leagues, force=args.force)
+            understat.run(
+                seasons=args.seasons, leagues=args.leagues,
+                proxy=args.proxy, force=args.force,
+            )
         elif name == "statsbomb":
             statsbomb.run(with_events=args.with_events, force=args.force)
         elif name == "transfermarkt":

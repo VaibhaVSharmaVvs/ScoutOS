@@ -18,13 +18,14 @@ SOURCE = "understat"
 def run(
     seasons: list[str] | None = None,
     leagues: list[str] | None = None,
+    proxy: str | None = None,
     force: bool = False,
 ) -> None:
     seasons = seasons or DEFAULT_SEASONS
     leagues = leagues or BIG5_LEAGUES
 
     cache_dir = SOURCE_DIRS[SOURCE] / "_cache"
-    us = sd.Understat(leagues=leagues, seasons=seasons, data_dir=cache_dir)
+    us = sd.Understat(leagues=leagues, seasons=seasons, data_dir=cache_dir, proxy=proxy)
     manifest = Manifest()
 
     log.info("Understat: %d leagues x %d seasons", len(leagues), len(seasons))
