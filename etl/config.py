@@ -42,22 +42,27 @@ BIG5_LEAGUES = [
 DEFAULT_SEASONS = ["2021", "2122", "2223", "2324", "2425"]
 
 # --- FBref -------------------------------------------------------------------
-# Player season stat categories worth pulling for feature engineering (Phase 3).
+# NOTE: soccerdata 1.9.0 only supports these 5 stat types at SEASON level
+# (read_(player|team)_season_stats). Detailed categories that exist on FBref
+# itself — passing, passing_types, goal_shot_creation, defense, possession,
+# keeper_adv — are NOT exposed at season level here; they would require
+# read_player_match_stats aggregation (Phase 3 follow-up). Invalid names raise
+# TypeError, so keep this list to exactly what the library accepts.
 FBREF_PLAYER_STAT_TYPES = [
     "standard",
     "shooting",
-    "passing",
-    "passing_types",
-    "goal_shot_creation",
-    "defense",
-    "possession",
     "playing_time",
     "misc",
     "keeper",
-    "keeper_adv",
 ]
 
-FBREF_TEAM_STAT_TYPES = ["standard", "shooting", "passing", "defense", "possession"]
+FBREF_TEAM_STAT_TYPES = [
+    "standard",
+    "shooting",
+    "playing_time",
+    "misc",
+    "keeper",
+]
 
 # --- Throttling ---------------------------------------------------------------
 # soccerdata throttles requests internally; this is an extra courtesy delay
