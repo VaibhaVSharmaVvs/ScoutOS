@@ -35,15 +35,20 @@ def load_features(version: str = "v1") -> pd.DataFrame:
     return out
 
 
+# the 5 base rate features (everything else base is a *_p90 count)
+RATE_FEATURES = {
+    "pass_cmp_pct", "shot_accuracy", "take_on_pct", "aerial_win_pct", "np_g_per_shot",
+}
+
+
 def feature_columns(df: pd.DataFrame) -> list[str]:
-    """Base per-90/rate feature columns (exclude percentiles + context/target)."""
-    exclude = {
-        "player_id", "season_id", "start_year", "season_label", "league_id",
-        "position_group", "age", "minutes", "matches", "club_elo",
-        "league_strength", "market_value_eur",
-    }
-    return [c for c in df.columns
-            if c not in exclude and not c.endswith(("_pct_pos", "_pct_lg"))]
+    """Base per-90/rate feature columns only.
+
+    Inclusion-based (match *_p90 or a known rate) so model-added columns
+    (labels, dates, targets, context) can never leak in as features. Percentile
+    columns end in _pct_pos/_pct_lg and so are excluded by the _p90 test.
+    """
+    return [c for c in df.columns if c.endswith("_p90") or c in RATE_FEATURES]
 
 
 def time_split(df: pd.DataFrame, test_start_year: int, val_start_year: int | None = None):
