@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 
 from etl.config import BIG5_LEAGUES, DEFAULT_SEASONS
-from etl.ingest import clubelo, fbref, statsbomb, transfermarkt, understat
+from etl.ingest import clubelo, fbref, fbref_kaggle, statsbomb, transfermarkt, understat
 
 SOURCES = {
     "fbref": fbref.run,
@@ -20,6 +20,7 @@ SOURCES = {
     "statsbomb": statsbomb.run,
     "transfermarkt": transfermarkt.run,
     "clubelo": clubelo.run,
+    "fbref_kaggle": fbref_kaggle.run,
 }
 
 
@@ -80,6 +81,8 @@ def main() -> None:
             transfermarkt.run(force=args.force)
         elif name == "clubelo":
             clubelo.run(proxy=args.proxy, force=args.force)
+        elif name == "fbref_kaggle":
+            fbref_kaggle.run(force=args.force)
 
 
 if __name__ == "__main__":

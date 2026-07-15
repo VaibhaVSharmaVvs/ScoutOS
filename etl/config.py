@@ -23,6 +23,7 @@ SOURCE_DIRS = {
     "statsbomb": RAW_DIR / "statsbomb",
     "transfermarkt": RAW_DIR / "transfermarkt",
     "clubelo": RAW_DIR / "clubelo",
+    "fbref_kaggle": RAW_DIR / "fbref_kaggle",
 }
 
 MANIFEST_PATH = RAW_DIR / "manifest.json"
