@@ -45,6 +45,41 @@ VALID = {
 }
 
 
+PLAYABLE_THRESHOLD = 0.15  # a role is "playable" if predicted prob >= this
+
+
+def load_model():
+    """Load the trained CatBoost model + metadata."""
+    import joblib
+    from catboost import CatBoostClassifier
+
+    meta = joblib.load(OUT / "meta.joblib")
+    model = CatBoostClassifier()
+    model.load_model(str(OUT / "model.cbm"))
+    return model, meta
+
+
+def predict_positions(model, meta, X: pd.DataFrame,
+                      playable_threshold: float = PLAYABLE_THRESHOLD) -> list[dict]:
+    """Ranked positions per row: primary, secondary, and all playable roles.
+
+    Returns [{primary, secondary, playable:[roles>=threshold], probs:{role:p}}].
+    Surfaces the model's positional versatility instead of a single best guess.
+    """
+    proba = model.predict_proba(X[meta["feature_cols"]])
+    classes = list(model.classes_)
+    out = []
+    for row in proba:
+        ranked = sorted(zip(classes, row), key=lambda kv: kv[1], reverse=True)
+        out.append({
+            "primary": ranked[0][0],
+            "secondary": ranked[1][0] if len(ranked) > 1 else None,
+            "playable": [r for r, p in ranked if p >= playable_threshold],
+            "probs": {r: round(float(p), 3) for r, p in ranked},
+        })
+    return out
+
+
 def _prep():
     df = load_features(FEATURE_SET_VERSION)
     pos = pd.read_sql("select id as player_id, primary_position from players", get_engine())

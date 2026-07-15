@@ -43,3 +43,15 @@ class TestTrainedPositionModel:
         X = pd.DataFrame([{c: 1.0 for c in meta["feature_cols"]}])
         pred = model.predict(X).ravel()[0]
         assert pred in set(meta["labels"])
+
+    def test_predict_positions_primary_secondary_playable(self):
+        from ml.models.position import PLAYABLE_THRESHOLD, load_model, predict_positions
+        model, meta = load_model()
+        X = pd.DataFrame([{c: 1.0 for c in meta["feature_cols"]}])
+        res = predict_positions(model, meta, X)[0]
+        assert res["primary"] in set(meta["labels"])
+        assert res["secondary"] in set(meta["labels"]) and res["secondary"] != res["primary"]
+        # primary is the argmax; playable = roles above threshold; probs sum ~1
+        assert res["probs"][res["primary"]] == max(res["probs"].values())
+        assert all(res["probs"][r] >= PLAYABLE_THRESHOLD for r in res["playable"])
+        assert abs(sum(res["probs"].values()) - 1.0) < 0.01
