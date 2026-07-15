@@ -1,0 +1,9 @@
+{
+  "tactical": 0.35,
+  "squad": 0.25,
+  "financial": 0.25,
+  "age": 0.15,
+  "_note": "Club Fit sub-score weights (must sum to 1.0). Tune without redeploy.",
+  "playable_min_minutes": 900,
+  "prime_age": 27
+}
