@@ -5,6 +5,8 @@ data/processed/
 *.parquet
 *.csv
 !**/fixtures/*.csv
+# entity-resolution manual overrides are source-of-truth config, not data
+!etl/load/overrides.csv
 
 # --- ML artifacts ---
 ml/models/
