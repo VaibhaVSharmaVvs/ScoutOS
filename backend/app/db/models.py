@@ -33,7 +33,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimestampMixin
 
 # --- Source enumeration (kept as a plain string + check constraint) ----------
-SOURCES = ("fbref", "understat", "transfermarkt", "clubelo", "statsbomb")
+SOURCES = ("fbref", "fbref_kaggle", "understat", "transfermarkt", "clubelo", "statsbomb")
 
 
 # --- Dimensions ---------------------------------------------------------------
