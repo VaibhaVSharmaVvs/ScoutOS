@@ -59,3 +59,4 @@ Thumbs.db
 # --- soccerdata / browser scraping artifacts ---
 downloaded_files/
 *.lock
+ml/artifacts/
