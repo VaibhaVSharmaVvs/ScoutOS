@@ -122,7 +122,7 @@ def _load_player_season_stats(session, lk) -> None:
             "matches": st.get("standard:Playing Time_MP"),
             "goals": st.get("standard:Performance_Gls"),
             "assists": st.get("standard:Performance_Ast"),
-            "xg": st.get("shooting:Expected_xG"),
+            "xg": None,  # FBref pull lacks Expected/xG columns; Understat supplies xg/xa
             "xa": None,
             "position": rec["pos"],
             "stats": st,
