@@ -7,10 +7,10 @@ and normalizes each publisher's schema to ONE canonical column set, saved as
 `data/raw/fbref_kaggle/player_season_<code>.parquet`.
 
 Covered seasons (all have Born -> clean resolution to canonical players):
-  2122, 2223  -> vivovinco (semicolon/latin-1, one wide file)
-  2425        -> hubertsidorowicz (comma, wide, _stats_<cat> suffixes)
-Not here: 2324 (anisguechtouli exists but lacks Born) and 2021 (absent) — those
-are the worldfootballR evaluation targets.
+  2021, 2122, 2223, 2324 -> akshankrithick (one cleaned CSV per season, uniform
+                            schema, counting stats as totals, SCA/GCA per-90)
+  2425                   -> hubertsidorowicz (wide, _stats_<cat> suffixes, totals)
+Two sources cover all five Big-5 seasons; no worldfootballR/scraping needed.
 """
 
 from __future__ import annotations
@@ -37,20 +37,20 @@ CANON = [
 ]
 
 # source column -> canonical
-VIVO_MAP = {
-    "Player": "player", "Squad": "squad", "Comp": "comp", "Born": "born",
-    "Nation": "nation", "Pos": "pos", "Age": "age", "MP": "mp", "Min": "minutes",
-    "90s": "nineties", "Goals": "goals", "Assists": "assists", "Shots": "shots",
-    "SoT": "sot", "PasTotCmp": "pass_cmp", "PasTotAtt": "pass_att",
-    "PasTotCmp%": "pass_cmp_pct", "PasProg": "pass_prog", "Pas3rd": "pass_final_third",
-    "PPA": "ppa", "PasTotPrgDist": "prog_pass_dist", "Touches": "touches",
-    "Carries": "carries", "CarProg": "carries_prog", "CarPrgDist": "carries_prog_dist",
-    "ToAtt": "take_ons_att", "ToSuc": "take_ons_succ", "RecProg": "prog_rec",
-    "Tkl": "tackles", "TklWon": "tackles_won", "TklDef3rd": "tackles_def3rd",
-    "Int": "interceptions", "Blocks": "blocks", "Tkl+Int": "tkl_plus_int",
-    "Clr": "clearances", "TklDri": "dribblers_challenged", "SCA": "sca", "GCA": "gca",
-    "Recov": "recoveries", "AerWon": "aerials_won", "AerLost": "aerials_lost",
-    "Fls": "fouls", "Fld": "fouled",
+AKSHAN_MAP = {
+    "player": "player", "squad": "squad", "comp": "comp", "born": "born",
+    "nation": "nation", "pos": "pos", "age": "age", "Matches Played": "mp",
+    "Avg Mins per Match": "minutes",  # actually total minutes in this dataset
+    "Goals": "goals", "Assists": "assists", "Expected Goals": "xg", "Exp NPG": "npxg",
+    "Total Shots": "shots", "Passes Completed": "pass_cmp",
+    "Passes Attempted": "pass_att", "Pass completion %": "pass_cmp_pct",
+    "Progressive Passes": "pass_prog", "1/3": "pass_final_third",
+    "Key passes": "key_passes", "Passes into penalty area": "ppa",
+    "Progressive passes distance": "prog_pass_dist",
+    "Progressive Carries": "carries_prog", "Take ons attempted": "take_ons_att",
+    "Tackles attempted": "tackles", "Tackles Won": "tackles_won",
+    "Interceptions": "interceptions", "Clearances": "clearances",
+    "Shot creating actions p 90": "sca", "Goal creating actions p 90": "gca",
 }
 
 HUBERT_MAP = {
@@ -68,28 +68,24 @@ HUBERT_MAP = {
     "Fld_stats_misc": "fouled",
 }
 
-# season code -> (kaggle ref, filename glob, read kwargs, mapping, per90)
-# per90=True means the source stores per-90 rates; we multiply counting metrics
-# by 90s to get season TOTALS (consistent with hubertsidorowicz and our other
-# sources, which store totals).
+# season code -> (kaggle ref, filename (relative), read kwargs, mapping, per90_cols)
+# per90_cols: canonical cols the source stores as per-90 -> multiplied by 90s to
+# season TOTALS (so all sources/seasons are consistent totals).
 DATASETS = {
-    "2122": ("vivovinco/20212022-football-player-stats", "*.csv",
-             {"sep": ";", "encoding": "latin-1"}, VIVO_MAP, True),
-    "2223": ("vivovinco/20222023-football-player-stats", "*.csv",
-             {"sep": ";", "encoding": "latin-1"}, VIVO_MAP, True),
-    "2425": ("hubertsidorowicz/football-players-stats-2024-2025", "players_data-2024_2025.csv",
-             {}, HUBERT_MAP, False),
+    "2021": ("akshankrithick/fbref-2017-2024-for-europes-top-5-leagues",
+             "cleaned_2020-21.csv", {}, AKSHAN_MAP, {"sca", "gca"}),
+    "2122": ("akshankrithick/fbref-2017-2024-for-europes-top-5-leagues",
+             "cleaned_2021-22.csv", {}, AKSHAN_MAP, {"sca", "gca"}),
+    "2223": ("akshankrithick/fbref-2017-2024-for-europes-top-5-leagues",
+             "cleaned_2022-23.csv", {}, AKSHAN_MAP, {"sca", "gca"}),
+    "2324": ("akshankrithick/fbref-2017-2024-for-europes-top-5-leagues",
+             "cleaned_2023-24.csv", {}, AKSHAN_MAP, {"sca", "gca"}),
+    "2425": ("hubertsidorowicz/football-players-stats-2024-2025",
+             "players_data-2024_2025.csv", {}, HUBERT_MAP, set()),
 }
 
-# identity + rate columns are NOT scaled by 90s; everything else is a count.
-_NON_COUNTING = {
-    "player", "squad", "comp", "season", "born", "nation", "pos", "age", "mp",
-    "minutes", "nineties", "pass_cmp_pct",
-}
-COUNTING_COLS = [c for c in CANON if c not in _NON_COUNTING]
 
-
-def _normalize(df: pd.DataFrame, mapping: dict, season: str, per90: bool) -> pd.DataFrame:
+def _normalize(df: pd.DataFrame, mapping: dict, season: str, per90_cols: set) -> pd.DataFrame:
     present = {src: dst for src, dst in mapping.items() if src in df.columns}
     out = df[list(present)].rename(columns=present).copy()
     out["season"] = season
@@ -97,11 +93,13 @@ def _normalize(df: pd.DataFrame, mapping: dict, season: str, per90: bool) -> pd.
         if col not in out.columns:
             out[col] = pd.NA
     out = out[CANON]
-    if per90:
-        nineties = pd.to_numeric(out["nineties"], errors="coerce")
-        for c in COUNTING_COLS:
-            vals = pd.to_numeric(out[c], errors="coerce")
-            out[c] = (vals * nineties).round()
+    # derive 90s from minutes when the source has no explicit 90s column
+    nineties = pd.to_numeric(out["nineties"], errors="coerce")
+    if nineties.isna().all():
+        nineties = pd.to_numeric(out["minutes"], errors="coerce") / 90
+        out["nineties"] = nineties.round(1)
+    for c in per90_cols:
+        out[c] = (pd.to_numeric(out[c], errors="coerce") * nineties).round()
     return out
 
 
@@ -111,7 +109,7 @@ def run(force: bool = False) -> None:
     import kagglehub
 
     manifest = Manifest()
-    for season, (ref, pattern, kw, mapping, per90) in DATASETS.items():
+    for season, (ref, pattern, kw, mapping, per90_cols) in DATASETS.items():
         if manifest.has(SOURCE, "player_season", season) and not force:
             log.info("skip %s (in manifest)", season)
             continue
@@ -125,7 +123,7 @@ def run(force: bool = False) -> None:
             log.error("no file matching %s in %s", pattern, ref)
             continue
         df = pd.read_csv(files[0], **kw)
-        norm = _normalize(df, mapping, season, per90)
+        norm = _normalize(df, mapping, season, per90_cols)
         out_path = SOURCE_DIRS[SOURCE] / f"player_season_{season}.parquet"
         rows = save_parquet(norm, out_path)
         mapped = sum(1 for c in CANON if norm[c].notna().any())
