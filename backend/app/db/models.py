@@ -86,8 +86,8 @@ class Player(Base, TimestampMixin):
     date_of_birth: Mapped[date | None] = mapped_column(Date)
     birth_year: Mapped[int | None] = mapped_column(Integer, index=True)
     nationality: Mapped[str | None] = mapped_column(String(64))
-    primary_position: Mapped[str | None] = mapped_column(String(16))
-    foot: Mapped[str | None] = mapped_column(String(8))
+    primary_position: Mapped[str | None] = mapped_column(String(32))
+    foot: Mapped[str | None] = mapped_column(String(16))
     height_cm: Mapped[int | None] = mapped_column(Integer)
 
     xrefs: Mapped[list[EntityXref]] = relationship(
@@ -140,7 +140,7 @@ class PlayerSeasonStats(Base, TimestampMixin):
     assists: Mapped[float | None] = mapped_column(Float)
     xg: Mapped[float | None] = mapped_column(Float)
     xa: Mapped[float | None] = mapped_column(Float)
-    position: Mapped[str | None] = mapped_column(String(16))
+    position: Mapped[str | None] = mapped_column(String(32))
     stats: Mapped[dict | None] = mapped_column(JSONB)
 
     player: Mapped[Player] = relationship(back_populates="season_stats")
