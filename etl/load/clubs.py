@@ -22,6 +22,18 @@ from etl.load.normalize import normalize_name
 
 CLUB_FUZZY_THRESHOLD = 85  # token_set_ratio within same country
 
+# ClubElo uses abbreviations with little/no token overlap with FBref names, so
+# fuzzy can't reach them. Map ClubElo name -> FBref normalized_name.
+CLUBELO_ALIASES = {
+    "Man City": "manchester city",
+    "Man United": "manchester utd",
+    "Forest": "nottingham",
+    "Bilbao": "athletic club",
+    "Paris SG": "paris saint germain",
+    "Bielefeld": "arminia",
+    "Fuerth": "greuther furth",
+}
+
 FBREF_STD = "data/raw/fbref/player_season/standard.parquet"
 UNDERSTAT = "data/raw/understat/player_season.parquet"
 CLUBELO_GLOB = "data/raw/clubelo/by_date/*.parquet"
@@ -90,20 +102,23 @@ def run() -> None:
         ce = pd.concat(
             [pd.read_parquet(f, columns=["team", "league"]) for f in glob.glob(CLUBELO_GLOB)]
         ).drop_duplicates()
-        ce_exact = ce_fuzzy = 0
+        ce_exact = ce_fuzzy = ce_alias = 0
         for team, league in ce.itertuples(index=False):
             if league not in LEAGUES:
                 continue
             country = LEAGUES[league][1]
+            alias_key = (CLUBELO_ALIASES.get(team, ""), country)
             key = (normalize_name(team), country)
-            if key in canon:
+            if alias_key in canon:
+                canon[alias_key].clubelo_name = team; ce_alias += 1
+            elif key in canon:
                 canon[key].clubelo_name = team; ce_exact += 1
             elif (m := _fuzzy(key[0], country)) is not None:
                 m.clubelo_name = team; ce_fuzzy += 1
 
         session.commit()
         log.info("clubs: %d canonical | fbref new=%d | understat exact=%d fuzzy=%d alias(new)=%d | "
-                 "clubelo exact=%d fuzzy=%d", len(canon), fb_n, us_exact, us_fuzzy, us_only,
-                 ce_exact, ce_fuzzy)
+                 "clubelo exact=%d fuzzy=%d alias=%d", len(canon), fb_n, us_exact, us_fuzzy, us_only,
+                 ce_exact, ce_fuzzy, ce_alias)
     finally:
         session.close()

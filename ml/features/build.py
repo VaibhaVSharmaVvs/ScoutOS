@@ -142,32 +142,46 @@ def build() -> None:
 
     df["market_value_eur"] = [_mv(p, y) for p, y in zip(df["player_id"], df["start_year"])]
 
-    # --- compute per-90 + rate features ---
-    def _num(x):
-        return pd.to_numeric(pd.Series([x]), errors="coerce").iloc[0]
+    df["position_group"] = [_pos_group(p) for p in df["position"]]
+
+    # --- base features (per-90 + rates), vectorized into a DataFrame ---
+    n90 = (pd.to_numeric(df["minutes"], errors="coerce") / 90).where(lambda x: x > 0)
+    feat = pd.DataFrame(index=df.index)
+    for c in PER90:
+        feat[f"{c}_p90"] = pd.to_numeric(df[c], errors="coerce") / n90
+
+    def _ratio(a, b):
+        bv = pd.to_numeric(df[b], errors="coerce")
+        return pd.to_numeric(df[a], errors="coerce") / bv.where(bv > 0)
+
+    feat["pass_cmp_pct"] = _ratio("pass_cmp", "pass_att")
+    feat["shot_accuracy"] = _ratio("sot", "shots")
+    feat["take_on_pct"] = _ratio("take_ons_succ", "take_ons_att")
+    aw = pd.to_numeric(df["aerials_won"], errors="coerce")
+    al = pd.to_numeric(df["aerials_lost"], errors="coerce")
+    feat["aerial_win_pct"] = aw / (aw + al).where((aw + al) > 0)
+    feat["np_g_per_shot"] = _ratio("goals", "shots")
+    base_cols = list(feat.columns)
+
+    # --- percentiles within (season, position_group) and (season, league) ---
+    g = feat.copy()
+    g["_season"], g["_pos"], g["_lg"] = df["season_id"], df["position_group"], df["league_id"]
+    pct = pd.DataFrame(index=df.index)
+    for c in base_cols:
+        pct[f"{c}_pct_pos"] = g.groupby(["_season", "_pos"])[c].rank(pct=True)
+        pct[f"{c}_pct_lg"] = g.groupby(["_season", "_lg"])[c].rank(pct=True)
+
+    # --- assemble features JSONB per row (NaN -> None) ---
+    def _r(x, nd):
+        return round(float(x), nd) if pd.notna(x) else None
 
     feats: list[dict] = []
-    for r in df.to_dict(orient="records"):
-        mins = _num(r.get("minutes"))
-        n90 = mins / 90 if pd.notna(mins) and mins > 0 else None
-        f = {}
-        for c in PER90:
-            v = _num(r.get(c))
-            f[f"{c}_p90"] = round(v / n90, 4) if pd.notna(v) and n90 else None
-
-        def rate(a, b):
-            av, bv = _num(r.get(a)), _num(r.get(b))
-            return round(av / bv, 4) if pd.notna(av) and pd.notna(bv) and bv else None
-
-        f["pass_cmp_pct"] = rate("pass_cmp", "pass_att")
-        f["shot_accuracy"] = rate("sot", "shots")
-        f["take_on_pct"] = rate("take_ons_succ", "take_ons_att")
-        aw, al = _num(r.get("aerials_won")), _num(r.get("aerials_lost"))
-        f["aerial_win_pct"] = (round(aw / (aw + al), 4)
-                               if pd.notna(aw) and pd.notna(al) and (aw + al) else None)
-        f["np_g_per_shot"] = rate("goals", "shots")
-        feats.append(f)
+    for i in df.index:
+        row = {c: _r(feat.at[i, c], 4) for c in base_cols}
+        row.update({c: _r(pct.at[i, c], 3) for c in pct.columns})
+        feats.append(row)
     df["features"] = feats
+    log.info("features: %d base + %d percentile keys per row", len(base_cols), len(pct.columns))
 
     # --- write player_features ---
     with SessionLocal() as s:
