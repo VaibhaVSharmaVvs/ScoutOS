@@ -79,11 +79,13 @@ def _lookups(session):
     club_by_understat = {c.understat_id: c.id for c in clubs if c.understat_id is not None}
     club_by_tm = {c.transfermarkt_id: c.id for c in clubs if c.transfermarkt_id is not None}
     club_by_elo = {c.clubelo_name: c.id for c in clubs if c.clubelo_name}
+    club_by_norm = {c.normalized_name: c.id for c in clubs}
     leagues = {l.code: l.id for l in session.scalars(select(League))}
     seasons = {s.code: s.id for s in session.scalars(select(Season))}
     return dict(fbref=fbref, understat=understat, tm=tm, club_by_fbref=club_by_fbref,
                 club_by_understat=club_by_understat, club_by_tm=club_by_tm,
-                club_by_elo=club_by_elo, leagues=leagues, seasons=seasons)
+                club_by_elo=club_by_elo, club_by_norm=club_by_norm,
+                leagues=leagues, seasons=seasons)
 
 
 # --- player_season_stats ------------------------------------------------------
@@ -158,6 +160,53 @@ def _load_player_season_stats(session, lk) -> None:
     log.info("player_season_stats Understat: %d rows (%d unresolved skipped)", len(us_rows), us_unresolved)
 
 
+# --- FBref detailed (from Kaggle; soccerdata's detailed pull was hollow) ------
+def _load_fbref_kaggle(session, lk) -> None:
+    import glob
+
+    from rapidfuzz import fuzz, process
+
+    from etl.ingest.fbref_kaggle import CANON
+    from etl.load.normalize import normalize_name
+
+    identity = {"player", "squad", "comp", "season", "born", "nation", "pos", "age",
+                "mp", "minutes", "nineties"}
+    detail_cols = [c for c in CANON if c not in identity]
+    club_norms = list(lk["club_by_norm"])
+
+    def resolve_club(squad):
+        n = normalize_name(squad)
+        if n in lk["club_by_norm"]:
+            return lk["club_by_norm"][n]
+        hit = process.extractOne(n, club_norms, scorer=fuzz.token_set_ratio, score_cutoff=88)
+        return lk["club_by_norm"][hit[0]] if hit else None
+
+    rows, unresolved = [], 0
+    for f in sorted(glob.glob("data/raw/fbref_kaggle/*.parquet")):
+        df = pd.read_parquet(f)
+        for r in df.to_dict(orient="records"):
+            if pd.isna(r.get("born")) or not r.get("player"):
+                unresolved += 1
+                continue
+            pid = lk["fbref"].get(f"{normalize_name(r['player'])}|{int(r['born'])}")
+            if pid is None:
+                unresolved += 1
+                continue
+            rows.append({
+                "player_id": pid, "club_id": resolve_club(r.get("squad")),
+                "league_id": None, "season_id": lk["seasons"].get(r["season"]),
+                "source": "fbref_kaggle",
+                "minutes": _clean(r.get("minutes")), "matches": _clean(r.get("mp")),
+                "goals": _clean(r.get("goals")), "assists": _clean(r.get("assists")),
+                "xg": _clean(r.get("xg")), "xa": None, "position": _clean(r.get("pos")),
+                "stats": {c: _clean(r.get(c)) for c in detail_cols},
+            })
+    rows = _dedup_pss(rows)
+    session.bulk_insert_mappings(PlayerSeasonStats, rows)
+    log.info("player_season_stats fbref_kaggle (detailed): %d rows (%d unresolved)",
+             len(rows), unresolved)
+
+
 # --- market values ------------------------------------------------------------
 def _load_market_values(session, lk) -> None:
     mv = pd.read_csv(TM_VALUATIONS)
@@ -214,6 +263,7 @@ def run() -> None:
         session.commit()
 
         _load_player_season_stats(session, lk)
+        _load_fbref_kaggle(session, lk)
         _load_club_strength(session, lk)
         _load_market_values(session, lk)
         _load_transfers(session, lk)

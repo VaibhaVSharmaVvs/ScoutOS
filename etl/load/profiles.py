@@ -15,24 +15,24 @@ from sqlalchemy import delete, select
 from app.db.models import PlayerSeasonStats, TeamTacticalProfile
 from etl.load.db import SessionLocal, log
 
-# profile metric -> JSONB key in the FBref stats blob (all confirmed present)
+# profile metric -> JSONB key in the fbref_kaggle canonical stats blob.
+# (soccerdata's FBref detail was hollow; the real detail comes from Kaggle.)
+SOURCE = "fbref_kaggle"
 METRICS = {
-    "goals": "standard:Performance_Gls",
-    "assists": "standard:Performance_Ast",
-    "shots": "shooting:Standard_Sh",
-    "shots_on_target": "shooting:Standard_SoT",
-    "passes_completed": "passing:Total_Cmp",
-    "prog_pass_dist": "passing:Total_PrgDist",
-    "carries": "possession:Carries_Carries",
-    "prog_carry_dist": "possession:Carries_PrgDist",
-    "touches": "possession:Touches_Touches",
-    "touches_att_3rd": "possession:Touches_Att 3rd",
-    "tackles": "defense:Tackles_Tkl",
-    "interceptions": "defense:Int",
-    "blocks": "defense:Blocks_Blocks",
-    "tkl_plus_int": "defense:Tkl+Int",
-    "sca": "gca:SCA_SCA",
-    "gca": "gca:GCA_GCA",
+    "goals": "goals",
+    "assists": "assists",
+    "shots": "shots",
+    "passes_completed": "pass_cmp",
+    "prog_passes": "pass_prog",
+    "prog_pass_dist": "prog_pass_dist",
+    "key_passes": "key_passes",
+    "prog_carries": "carries_prog",
+    "tackles": "tackles",
+    "tackles_won": "tackles_won",
+    "interceptions": "interceptions",
+    "clearances": "clearances",
+    "sca": "sca",
+    "gca": "gca",
 }
 
 
@@ -60,7 +60,7 @@ def run() -> None:
 
         groups: dict[tuple[int, int], list] = defaultdict(list)
         for row in session.scalars(
-            select(PlayerSeasonStats).where(PlayerSeasonStats.source == "fbref")
+            select(PlayerSeasonStats).where(PlayerSeasonStats.source == SOURCE)
         ):
             if row.club_id and row.season_id:
                 groups[(row.club_id, row.season_id)].append(row)
