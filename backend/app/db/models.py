@@ -200,6 +200,42 @@ class ClubStrength(Base, TimestampMixin):
     )
 
 
+class PlayerFeatures(Base, TimestampMixin):
+    """ML-ready features per player-season (Phase 3).
+
+    Merges the source rows (fbref_kaggle detailed + understat xG) into one
+    normalized feature vector. Context columns are promoted for querying; the
+    numeric feature vector (per-90 + rate + percentile features) lives in the
+    JSONB `features` blob, keyed by feature name. `feature_set_version` lets us
+    evolve the feature set without breaking trained models.
+    """
+
+    __tablename__ = "player_features"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
+    season_id: Mapped[int] = mapped_column(ForeignKey("seasons.id"), index=True)
+    club_id: Mapped[int | None] = mapped_column(ForeignKey("clubs.id"))
+    league_id: Mapped[int | None] = mapped_column(ForeignKey("leagues.id"))
+    feature_set_version: Mapped[str] = mapped_column(String(16), index=True)
+
+    age: Mapped[float | None] = mapped_column(Float)
+    minutes: Mapped[int | None] = mapped_column(Integer)
+    matches: Mapped[int | None] = mapped_column(Integer)
+    position: Mapped[str | None] = mapped_column(String(32))
+    position_group: Mapped[str | None] = mapped_column(String(8), index=True)
+    club_elo: Mapped[float | None] = mapped_column(Float)
+    league_strength: Mapped[float | None] = mapped_column(Float)
+    market_value_eur: Mapped[int | None] = mapped_column(Numeric(14, 0))  # value-model target
+
+    features: Mapped[dict | None] = mapped_column(JSONB)
+
+    __table_args__ = (
+        UniqueConstraint("player_id", "season_id", "feature_set_version",
+                         name="uq_pf_player_season_version"),
+    )
+
+
 class TeamTacticalProfile(Base, TimestampMixin):
     """Per club-season tactical profile, aggregated from player stats (Phase 3)."""
 
