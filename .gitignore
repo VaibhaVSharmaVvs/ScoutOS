@@ -8,8 +8,8 @@ data/processed/
 # entity-resolution manual overrides are source-of-truth config, not data
 !etl/load/overrides.csv
 
-# --- ML artifacts ---
-ml/models/
+# --- ML artifacts (trained models/scalers; code lives in ml/models/ & ml/features/) ---
+ml/artifacts/
 *.pt
 *.pth
 *.pkl

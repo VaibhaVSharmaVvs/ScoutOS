@@ -202,7 +202,8 @@ def build() -> None:
                 "position_group": _pos_group(r["position"]),
                 "club_elo": float(r["club_elo"]) if pd.notna(r["club_elo"]) else None,
                 "league_strength": float(r["league_strength"]) if pd.notna(r["league_strength"]) else None,
-                "market_value_eur": r["market_value_eur"],
+                "market_value_eur": (int(r["market_value_eur"])
+                                     if pd.notna(r["market_value_eur"]) else None),
                 "features": r["features"],
             })
         s.bulk_insert_mappings(PlayerFeatures, rows)
