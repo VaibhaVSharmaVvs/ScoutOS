@@ -92,3 +92,63 @@ def test_club_fit_ranking(haaland_id):
     assert fits == sorted(fits, reverse=True)
     for r in body["results"]:
         assert 0 <= r["overall_fit"] <= 100
+
+
+def test_squad_analysis(haaland_id):
+    # get a real club_id from Haaland's club-fit ranking
+    fits = client.get(f"/players/{haaland_id}/club-fit", params={"top": 1}).json()
+    club_id = fits["results"][0]["club_id"]
+    body = client.get(f"/clubs/{club_id}/squad-analysis").json()
+    assert body["squad_size"] > 0
+    assert {d["position_group"] for d in body["depth"]} == {"GK", "DEF", "MID", "FWD"}
+    assert isinstance(body["gaps"], list)
+
+
+def test_squad_analysis_404():
+    assert client.get("/clubs/99999999/squad-analysis").status_code == 404
+
+
+def test_career_simulation(haaland_id):
+    body = client.get(f"/players/{haaland_id}/career-simulation").json()
+    labels = [p["label"] for p in body["trajectory"]]
+    assert labels == ["current", "+1yr", "+3yr"]
+    assert body["trajectory"][0]["value_eur"] > 0
+    assert body["trajectory"][-1]["drivers"]  # projected points carry drivers
+
+
+def test_cache_header_present():
+    r = client.get("/players/search", params={"q": "Haaland"})
+    assert r.headers.get("X-Cache") in ("HIT", "MISS")
+
+
+def test_auth_flow():
+    email, pw = "pytest-user@example.com", "secret-pw-123"
+    reg = client.post("/auth/register", json={"email": email, "password": pw})
+    assert reg.status_code in (201, 409)  # idempotent across runs
+    assert client.get("/auth/me").status_code == 401  # no token
+    token = client.post(
+        "/auth/login", data={"username": email, "password": pw}
+    ).json()["access_token"]
+    me = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert me.status_code == 200 and me.json()["email"] == email
+    assert client.post(
+        "/auth/login", data={"username": email, "password": "wrong"}
+    ).status_code == 401
+
+
+def test_rate_limit():
+    from fastapi import FastAPI
+
+    from app.middleware import RateLimitMiddleware
+
+    app2 = FastAPI()
+    app2.add_middleware(RateLimitMiddleware, limit=3, window=60)
+
+    @app2.get("/ping")
+    def ping():
+        return {"ok": True}
+
+    cc = TestClient(app2)
+    codes = [cc.get("/ping").status_code for _ in range(5)]
+    assert codes[:3] == [200, 200, 200]
+    assert codes[3:] == [429, 429]

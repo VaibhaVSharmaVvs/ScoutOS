@@ -106,3 +106,48 @@ class ClubFitResponse(BaseModel):
     player_id: int
     player: str
     results: list[ClubFit]
+
+
+class PositionDepth(BaseModel):
+    position_group: str
+    squad_size: int
+    regulars: int          # players over the regular-minutes threshold
+    avg_age: float | None = None
+    total_value_eur: float | None = None
+
+
+class SquadAnalysis(BaseModel):
+    club_id: int
+    club: str
+    season: str
+    squad_size: int
+    avg_age: float | None = None
+    total_value_eur: float | None = None
+    depth: list[PositionDepth]
+    gaps: list[str]        # position groups that look thin (few regulars)
+
+
+class CareerPoint(BaseModel):
+    label: str             # "current", "+1yr", "+3yr"
+    horizon_years: int     # 0 for current
+    age: float | None = None
+    value_eur: float | None = None
+    drivers: list[Driver] = []
+
+
+class CareerSimulation(BaseModel):
+    player_id: int
+    player: str
+    season: str
+    trajectory: list[CareerPoint]
+    note: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserOut(BaseModel):
+    id: int
+    email: str

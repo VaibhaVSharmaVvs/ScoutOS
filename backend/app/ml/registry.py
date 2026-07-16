@@ -8,9 +8,11 @@ check for the health endpoint.
 
 from __future__ import annotations
 
+import logging
 from functools import lru_cache
 from pathlib import Path
 
+log = logging.getLogger("scoutos.ml")
 ART = Path("ml/artifacts/models")
 
 
@@ -29,6 +31,32 @@ def club_fit_engine():
     from ml.models.club_fit import ClubFitEngine
 
     return ClubFitEngine()
+
+
+def warmup() -> None:
+    """Load models + FAISS indexes into memory at startup (best-effort).
+
+    A missing/failed model logs a warning rather than crashing boot — the
+    matching endpoint will surface the error when actually called.
+    """
+    steps = {
+        "position": position_models,
+        "club_fit": club_fit_engine,
+        "similarity_current": lambda: _warm_similarity("current"),
+        "similarity_career": lambda: _warm_similarity("career"),
+    }
+    for name, fn in steps.items():
+        try:
+            fn()
+            log.info("warmup: %s ready", name)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("warmup: %s unavailable (%s)", name, exc)
+
+
+def _warm_similarity(mode: str):
+    from ml.models.similarity import _load_mode
+
+    return _load_mode(mode)
 
 
 def available() -> dict[str, bool]:
