@@ -7,9 +7,25 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.db.session import get_session
-from app.schemas import PlayerHit, PlayerProfile, SeasonStat
+from app.ml.features import latest_feature_row
+from app.schemas import (
+    MarketValuePoint,
+    PlayerHit,
+    PlayerProfile,
+    RadarMetric,
+    RadarResponse,
+    SeasonStat,
+)
 
 router = APIRouter(prefix="/players", tags=["players"])
+
+# curated radar axes: (per-90 feature, display label)
+RADAR_METRICS = [
+    ("goals_p90", "Goals"), ("xg_p90", "xG"), ("assists_p90", "Assists"),
+    ("key_passes_p90", "Key passes"), ("sca_p90", "Shot creation"),
+    ("pass_prog_p90", "Prog. passes"), ("carries_prog_p90", "Prog. carries"),
+    ("tackles_p90", "Tackles"), ("interceptions_p90", "Interceptions"),
+]
 
 _SEARCH_SQL = text(
     "select id, full_name, primary_position, nationality, birth_year, foot "
@@ -53,6 +69,42 @@ def search_players(
         _SEARCH_SQL, {"like": f"%{q}%", "prefix": f"{q}%", "limit": limit}
     ).mappings().all()
     return [PlayerHit(**r) for r in rows]
+
+
+@router.get("/{player_id}/market-values", response_model=list[MarketValuePoint])
+def player_market_values(player_id: int, db: Session = Depends(get_session)) -> list[MarketValuePoint]:
+    """Chronological market-value history (for the profile value chart)."""
+    rows = db.execute(text(
+        "select as_of, value_eur from market_values "
+        "where player_id = :pid and value_eur is not null order by as_of"),
+        {"pid": player_id}).mappings().all()
+    return [MarketValuePoint(as_of=str(r["as_of"]), value_eur=float(r["value_eur"])) for r in rows]
+
+
+@router.get("/{player_id}/radar", response_model=RadarResponse)
+def player_radar(player_id: int) -> RadarResponse:
+    """Position-percentile profile (radar axes) + derived strengths/weaknesses."""
+    row = latest_feature_row(player_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="no feature data for this player")
+
+    metrics: list[RadarMetric] = []
+    for feat, label in RADAR_METRICS:
+        pct = row.get(f"{feat}_pct_pos")
+        if pct is None:
+            continue
+        per90 = row.get(feat)
+        metrics.append(RadarMetric(
+            metric=feat, label=label, percentile=round(float(pct), 3),
+            per90=None if per90 is None else round(float(per90), 2),
+        ))
+    ranked = sorted(metrics, key=lambda m: m.percentile, reverse=True)
+    return RadarResponse(
+        player_id=player_id, season=row["season"],
+        position_group=row.get("position_group"), metrics=metrics,
+        strengths=[m.label for m in ranked[:3] if m.percentile >= 0.6],
+        weaknesses=[m.label for m in ranked[-3:] if m.percentile <= 0.4][::-1],
+    )
 
 
 @router.get("/{player_id}", response_model=PlayerProfile)

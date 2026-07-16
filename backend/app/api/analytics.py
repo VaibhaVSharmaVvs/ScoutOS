@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -11,6 +11,7 @@ from app.ml.features import latest_feature_row
 from app.schemas import (
     CareerPoint,
     CareerSimulation,
+    ClubHit,
     PositionDepth,
     SquadAnalysis,
 )
@@ -28,6 +29,23 @@ _SQUAD_SQL = text(
     "from player_features pf join seasons s on s.id = pf.season_id "
     "where pf.feature_set_version='v1' and s.label=:season and pf.club_id=:cid"
 )
+
+
+@router.get("/clubs", response_model=list[ClubHit], tags=["clubs"])
+def search_clubs(
+    q: str = Query(..., min_length=2, description="Club name fragment"),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_session),
+) -> list[ClubHit]:
+    """Clubs that have a current-season squad profile (usable by squad-analysis)."""
+    rows = db.execute(text(
+        "select distinct c.id, c.name, c.country from clubs c "
+        "join player_features pf on pf.club_id = c.id "
+        "join seasons s on s.id = pf.season_id "
+        "where s.label = :season and c.name ilike :like "
+        "order by c.name limit :limit"),
+        {"season": CURRENT_SEASON, "like": f"%{q}%", "limit": limit}).mappings().all()
+    return [ClubHit(**r) for r in rows]
 
 
 @router.get("/clubs/{club_id}/squad-analysis", response_model=SquadAnalysis)

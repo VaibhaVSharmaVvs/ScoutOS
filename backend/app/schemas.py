@@ -108,6 +108,33 @@ class ClubFitResponse(BaseModel):
     results: list[ClubFit]
 
 
+class ClubHit(BaseModel):
+    id: int
+    name: str
+    country: str | None = None
+
+
+class MarketValuePoint(BaseModel):
+    as_of: str
+    value_eur: float
+
+
+class RadarMetric(BaseModel):
+    metric: str
+    label: str
+    percentile: float          # 0-1, vs same position group
+    per90: float | None = None
+
+
+class RadarResponse(BaseModel):
+    player_id: int
+    season: str
+    position_group: str | None = None
+    metrics: list[RadarMetric]
+    strengths: list[str]       # labels of top percentile metrics
+    weaknesses: list[str]      # labels of bottom percentile metrics
+
+
 class PositionDepth(BaseModel):
     position_group: str
     squad_size: int

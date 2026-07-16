@@ -2,3 +2,7 @@ node_modules/
 dist/
 .vite/
 *.local
+# tsc build outputs (vite.config.ts gets compiled by `tsc -b`)
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
