@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440
 
+    # LLM explanation layer (Phase 6). Empty key -> deterministic stub narratives.
+    anthropic_api_key: str = ""
+    llm_model: str = "claude-sonnet-5"
+    llm_max_tokens: int = 700
+    llm_temperature: float = 0.2
+    llm_cache_ttl: int = 86400  # explanations regenerate only when inputs change
+
 
 @lru_cache
 def get_settings() -> Settings:

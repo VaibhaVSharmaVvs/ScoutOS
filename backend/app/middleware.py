@@ -26,7 +26,9 @@ CACHEABLE_PREFIXES = ("/players", "/clubs")
 class ResponseCacheMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
-        if request.method != "GET" or not path.startswith(CACHEABLE_PREFIXES):
+        # /explain does its own version-keyed caching in the service layer.
+        if (request.method != "GET" or not path.startswith(CACHEABLE_PREFIXES)
+                or "/explain" in path):
             return await call_next(request)
 
         key = f"resp:{path}?{request.url.query}"

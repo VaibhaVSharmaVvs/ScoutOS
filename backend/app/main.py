@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.analytics import router as analytics_router
 from app.api.auth import router as auth_router
 from app.api.discover import router as discover_router
+from app.api.explain import router as explain_router
 from app.api.health import router as health_router
 from app.api.players import router as players_router
 from app.api.predict import router as predict_router
@@ -51,6 +52,7 @@ app.include_router(players_router)
 app.include_router(predict_router)
 app.include_router(discover_router)
 app.include_router(analytics_router)
+app.include_router(explain_router)
 
 
 @app.get("/")
