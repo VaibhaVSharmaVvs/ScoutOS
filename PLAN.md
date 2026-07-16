@@ -145,10 +145,12 @@ ScoutOS/
 
 **Hard rule from the proposal: the LLM never predicts — it only explains model outputs.**
 
-- [ ] Pipeline: model outputs (similarity, position, club-fit, value, SHAP top features) → structured prompt → Claude API → narrative
-- [ ] Prompt templates per question type (club fit, development, comparison)
-- [ ] Responses cached in Redis keyed by (player, model versions) — explanations only regenerate when predictions change
-- [ ] Guardrail: every claim in the prompt context comes from a model output or DB fact; temperature low
+- [x] Pipeline: model outputs (value/potential/position/club-fit/similarity + SHAP drivers) → structured prompt → Claude API → narrative (`app/llm/`)
+- [x] Prompt templates per question type: report (development), club fit, comparison (`app/llm/prompts.py`)
+- [x] Responses cached in Redis keyed by (player, model versions) — regenerate only when a model version or the LLM model changes (`service._version_tag`)
+- [x] Guardrail: every claim comes from a model output/DB fact (echoed in `grounding`); temperature 0.2; system prompt forbids predicting/inventing
+
+**DONE** (@ ca28ef7). Endpoints: `/players/{id}/explain`, `.../explain/club-fit/{club_id}`, `.../explain/comparison/{other_id}`. Pluggable provider: real Anthropic (`claude-sonnet-5`) when `ANTHROPIC_API_KEY` is set, deterministic **stub** otherwise so the pipeline works keyless. Live path covered by a mocked-client test.
 
 ---
 
