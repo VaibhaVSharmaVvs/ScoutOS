@@ -37,7 +37,13 @@ def _base_feature_frame(version: str) -> pd.DataFrame:
         f"'{version}'", eng
     )
     feats = pd.json_normalize(df["features"])
-    base = [c for c in feats.columns if not c.endswith(("_pct_pos", "_pct_lg"))]
+    # STYLE features only (per-90 + rates). Exclude percentiles and the youth /
+    # market signals (intl_caps, contract_years, highest_value_log) — those are
+    # value/potential inputs, not playing-style, and must stay out of the
+    # similarity embedding that this scaler feeds.
+    youth = {"intl_caps", "contract_years", "highest_value_log"}
+    base = [c for c in feats.columns
+            if not c.endswith(("_pct_pos", "_pct_lg")) and c not in youth]
     return feats[sorted(base)]
 
 
