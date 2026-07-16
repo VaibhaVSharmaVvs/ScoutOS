@@ -143,6 +143,14 @@ class CareerSimulation(BaseModel):
     note: str
 
 
+class ExplanationResponse(BaseModel):
+    kind: str                  # "report" | "club_fit" | "comparison"
+    narrative: str             # scout-style text (LLM or stub)
+    provider: str              # "anthropic" | "stub" | "stub-fallback"
+    cached: bool
+    grounding: dict            # the exact model outputs / facts the narrative is built on
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
