@@ -128,12 +128,14 @@ ScoutOS/
 
 **Endpoints:** `/search`, `/player/{id}`, `/similar`, `/predict/value`, `/predict/position`, `/predict/potential`, `/club-fit`, `/squad-analysis`, `/career-simulation`
 
-- [ ] Layered structure: routers → services → repositories; Pydantic schemas throughout
-- [ ] Models loaded once at startup (lifespan handler); FAISS index in memory
-- [ ] Redis caching for hot players and search results (TTL-based)
-- [ ] Auth: JWT (register/login) — keep simple, single role
-- [ ] Rate limiting on public endpoints
-- [ ] OpenAPI docs auto-generated; integration tests per endpoint
+- [x] Layered structure: routers (`app/api/`) → serving layer (`app/ml/`) → DB; Pydantic schemas throughout (`app/schemas.py`)
+- [x] Models loaded once at startup (lifespan `warmup()`); FAISS indexes resident in memory (`similarity._load_mode` cached)
+- [x] Redis caching for hot players/search (`ResponseCacheMiddleware`, TTL 300s) — degrades to no-op when Redis is down
+- [x] Auth: JWT register/login/me, single role (`users` table, bcrypt); `get_current_user` dependency ready to gate routes
+- [x] Rate limiting on public endpoints (`RateLimitMiddleware`, fixed-window per-IP)
+- [x] OpenAPI docs auto-generated (/docs); integration tests per endpoint (18 backend tests, skip cleanly without DB)
+
+**DONE** — all endpoints live + verified over real HTTP (Phase 5.1 @ 62e0c2d, 5.2 @ 7fcb17b). Every prediction returns `explain.*` driving factors for the LLM layer. Run from repo root: `PYTHONPATH=. uvicorn app.main:app --app-dir backend`.
 
 ---
 
