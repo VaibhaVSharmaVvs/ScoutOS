@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import argparse
 
-STEPS = ["dimensions", "clubs", "players", "facts", "profiles", "checks"]
+STEPS = ["dimensions", "clubs", "players", "enrich", "facts", "profiles", "checks"]
 
 
 def main() -> None:
@@ -29,6 +29,9 @@ def main() -> None:
         elif step == "players":
             from etl.load import players
             players.run()
+        elif step == "enrich":
+            from etl.load import enrich
+            enrich.run()
         elif step == "facts":
             from etl.load import facts
             facts.run()

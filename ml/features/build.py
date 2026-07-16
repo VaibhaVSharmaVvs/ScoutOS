@@ -13,6 +13,7 @@ Run from repo root (after the load stage):  python -m ml.features.build
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 from sqlalchemy import delete, select
 
@@ -142,6 +143,16 @@ def build() -> None:
 
     df["market_value_eur"] = [_mv(p, y) for p, y in zip(df["player_id"], df["start_year"])]
 
+    # youth-value / potential signals (value_v2)
+    pl = pd.read_sql(
+        "select id as player_id, international_caps, contract_expiration, "
+        "highest_market_value_eur from players", eng)
+    df = df.merge(pl, on="player_id", how="left")
+    df["intl_caps"] = pd.to_numeric(df["international_caps"], errors="coerce")
+    contract_yr = pd.to_datetime(df["contract_expiration"], errors="coerce").dt.year
+    df["contract_years"] = (contract_yr - (df["start_year"] + 1)).clip(lower=0)
+    df["highest_value_log"] = np.log1p(pd.to_numeric(df["highest_market_value_eur"], errors="coerce"))
+
     df["position_group"] = [_pos_group(p) for p in df["position"]]
 
     # --- base features (per-90 + rates), vectorized into a DataFrame ---
@@ -175,13 +186,16 @@ def build() -> None:
     def _r(x, nd):
         return round(float(x), nd) if pd.notna(x) else None
 
+    youth_cols = ["intl_caps", "contract_years", "highest_value_log"]
     feats: list[dict] = []
     for i in df.index:
         row = {c: _r(feat.at[i, c], 4) for c in base_cols}
         row.update({c: _r(pct.at[i, c], 3) for c in pct.columns})
+        row.update({c: _r(df.at[i, c], 3) for c in youth_cols})
         feats.append(row)
     df["features"] = feats
-    log.info("features: %d base + %d percentile keys per row", len(base_cols), len(pct.columns))
+    log.info("features: %d base + %d percentile + %d youth keys per row",
+             len(base_cols), len(pct.columns), len(youth_cols))
 
     # --- write player_features ---
     with SessionLocal() as s:

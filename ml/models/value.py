@@ -27,6 +27,11 @@ MODEL_VERSION = "value_v1"
 FEATURE_SET_VERSION = "v1"
 MIN_MINUTES = 300          # drop tiny samples (noisy per-90) from training
 TEST_YEAR, VAL_YEAR = 2024, 2023  # 2024-25 test, 2023-24 val
+# NOTE: youth-snapshot signals (highest_market_value/caps/contract) were tested
+# and REJECTED: highest_market_value is temporally leaky (all-time peak leaks
+# future value in a time-split), and caps/contract barely move U21 fit while
+# slightly hurting overall. The non-leaky young-player signal is point-in-time
+# transfer fees (transfers table) — a future value_v2 (see CLAUDE.md).
 CATEGORICALS = ["position_group", "league_id"]
 CONTEXT = ["age", "minutes", "club_elo", "league_strength"]
 OUT = Path("ml/artifacts/models") / MODEL_VERSION

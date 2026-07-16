@@ -23,9 +23,10 @@ def load_features(version: str = "v1") -> pd.DataFrame:
     df = pd.read_sql(
         "select pf.player_id, pf.season_id, s.start_year, s.label as season_label, "
         "pf.league_id, pf.position_group, pf.age, pf.minutes, pf.matches, "
-        "pf.club_elo, pf.league_strength, "
+        "pf.club_elo, pf.league_strength, pl.foot, "
         "nullif(pf.market_value_eur, 'NaN')::numeric as market_value_eur, pf.features "
         f"from player_features pf join seasons s on s.id = pf.season_id "
+        "join players pl on pl.id = pf.player_id "
         f"where pf.feature_set_version = '{version}'",
         eng,
     )

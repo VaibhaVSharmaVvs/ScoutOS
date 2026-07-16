@@ -89,6 +89,11 @@ class Player(Base, TimestampMixin):
     primary_position: Mapped[str | None] = mapped_column(String(32))
     foot: Mapped[str | None] = mapped_column(String(16))
     height_cm: Mapped[int | None] = mapped_column(Integer)
+    # youth-value / potential signals (from Transfermarkt; Phase 4 value_v2)
+    international_caps: Mapped[int | None] = mapped_column(Integer)
+    international_goals: Mapped[int | None] = mapped_column(Integer)
+    contract_expiration: Mapped[date | None] = mapped_column(Date)
+    highest_market_value_eur: Mapped[int | None] = mapped_column(Numeric(14, 0))
 
     xrefs: Mapped[list[EntityXref]] = relationship(
         back_populates="player", cascade="all, delete-orphan"
