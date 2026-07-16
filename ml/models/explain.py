@@ -16,6 +16,8 @@ Coverage:
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -73,26 +75,39 @@ def explain_potential(feature_row: dict, horizon=3, top_n=6) -> dict:
             "predicted_value_eur": round(max(float(np.expm1(pred_log)), 0)), "drivers": drivers}
 
 
+@lru_cache(maxsize=1)
+def _style_vectors(version: str = "v1"):
+    """Per-player z-scored style vector (mean across their seasons), cached.
+
+    Returns (feature_names, {player_id: np.ndarray}). One scaler.transform over
+    all rows, then averaged per player — cheap to reuse across many explanations.
+    """
+    from app.db.session import get_engine
+    from ml.features.scaler import load as load_scaler, transform
+
+    _, names, _ = load_scaler(version)
+    feats = pd.read_sql(
+        f"select player_id, features from player_features where feature_set_version='{version}'",
+        get_engine()).reset_index(drop=True)
+    mat = transform(list(feats["features"]), version)
+    vecs = {int(pid): mat[list(idx)].mean(0)
+            for pid, idx in feats.groupby("player_id").groups.items()}
+    return names, vecs
+
+
+def _shared_traits(a, b, names, top_n=5) -> list[dict]:
+    """Style dims where BOTH players sit clearly above average (z>0.4)."""
+    shared = sorted(((names[i], min(a[i], b[i])) for i in range(len(names))
+                     if a[i] > 0.4 and b[i] > 0.4), key=lambda kv: kv[1], reverse=True)
+    return [{"feature": f, "label": _label(f)} for f, _ in shared[:top_n]]
+
+
 def explain_similarity(player_id: int, other_id: int, top_n=5) -> dict:
     """Style traits two players most share. Embedding dims aren't human-readable,
     so we report the standout STYLE features (z-scored per-90/rates) where BOTH
     players sit well above average — the traits that make them alike."""
-    from app.db.session import get_engine
-    from ml.features.scaler import load as load_scaler, transform
-
-    _, names, _ = load_scaler("v1")
-    feats = pd.read_sql(
-        "select player_id, features from player_features where feature_set_version='v1'",
-        get_engine())
-
-    def _vec(pid):
-        sub = feats[feats["player_id"] == pid]
-        return None if sub.empty else transform(list(sub["features"]), "v1").mean(0)
-
-    a, b = _vec(player_id), _vec(other_id)
+    names, vecs = _style_vectors("v1")
+    a, b = vecs.get(player_id), vecs.get(other_id)
     if a is None or b is None:
         return {"shared_traits": []}
-    # dims where BOTH are clearly above average (z>0.4) -> shared strengths
-    shared = sorted(((names[i], min(a[i], b[i])) for i in range(len(names))
-                     if a[i] > 0.4 and b[i] > 0.4), key=lambda kv: kv[1], reverse=True)
-    return {"shared_traits": [{"feature": f, "label": _label(f)} for f, _ in shared[:top_n]]}
+    return {"shared_traits": _shared_traits(a, b, names, top_n)}

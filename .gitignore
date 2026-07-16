@@ -10,6 +10,7 @@ data/processed/
 
 # --- ML artifacts (trained models/scalers; code lives in ml/models/ & ml/features/) ---
 ml/artifacts/
+catboost_info/
 *.pt
 *.pth
 *.pkl
