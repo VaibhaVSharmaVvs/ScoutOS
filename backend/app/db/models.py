@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import date, datetime
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Date,
     DateTime,
@@ -34,6 +35,18 @@ from app.db.base import Base, TimestampMixin
 
 # --- Source enumeration (kept as a plain string + check constraint) ----------
 SOURCES = ("fbref", "fbref_kaggle", "understat", "transfermarkt", "clubelo", "statsbomb")
+
+
+# --- Auth ---------------------------------------------------------------------
+class User(Base, TimestampMixin):
+    """API user. Single-role for now (Phase 5); expand to roles later."""
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(255))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
 
 
 # --- Dimensions ---------------------------------------------------------------

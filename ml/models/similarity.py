@@ -18,6 +18,7 @@ face-valid example queries.
 from __future__ import annotations
 
 import json
+from functools import lru_cache
 from pathlib import Path
 
 import faiss
@@ -173,24 +174,33 @@ def train() -> dict:
 
 
 # --- inference ---------------------------------------------------------------
+@lru_cache(maxsize=2)
+def _load_mode(mode: str):
+    """Load (rows, embeddings, FAISS index) for a mode once, then keep resident.
+
+    Called at API startup (registry.warmup) so the index lives in memory instead
+    of being re-read from disk on every request.
+    """
+    prefix = "career" if mode == "career" else "season"
+    rows = pd.read_parquet(OUT / f"{prefix}_rows.parquet")
+    Z = np.load(OUT / f"{prefix}_embeddings.npy")
+    index = faiss.read_index(str(OUT / f"{prefix}_index.faiss"))
+    return rows, Z, index
+
+
 def find_similar(player_id: int, k: int = 10, mode: str = "current",
                  same_position: bool = False) -> list[dict]:
     """Similar players by 'current' (latest-season) or 'career' style."""
     if mode not in ("current", "career"):
         raise ValueError("mode must be 'current' or 'career'")
 
+    rows, Z, index = _load_mode(mode)
     if mode == "career":
-        rows = pd.read_parquet(OUT / "career_rows.parquet")
-        Z = np.load(OUT / "career_embeddings.npy")
-        index = faiss.read_index(str(OUT / "career_index.faiss"))
         match = rows.index[rows["player_id"] == player_id]
         if len(match) == 0:
             return []
         qi = int(match[0])
     else:
-        rows = pd.read_parquet(OUT / "season_rows.parquet")
-        Z = np.load(OUT / "season_embeddings.npy")
-        index = faiss.read_index(str(OUT / "season_index.faiss"))
         q = rows[rows["player_id"] == player_id]
         if q.empty:
             return []
