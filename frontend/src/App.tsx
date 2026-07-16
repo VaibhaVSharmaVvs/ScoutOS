@@ -1,45 +1,29 @@
-import { useEffect, useState } from "react";
+import { Route, Routes } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-
-type Health = { status: string; service: string; version: string };
+import { Layout } from "./components/Layout";
+import { CareerSimulator } from "./pages/CareerSimulator";
+import { ClubFinder } from "./pages/ClubFinder";
+import { Home } from "./pages/Home";
+import { Login } from "./pages/Login";
+import { PlayerLayout } from "./pages/PlayerLayout";
+import { PlayerOverview } from "./pages/PlayerOverview";
+import { SimilarPlayers } from "./pages/SimilarPlayers";
+import { SquadAnalyzer } from "./pages/SquadAnalyzer";
 
 export default function App() {
-  const [health, setHealth] = useState<Health | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch(`${API_BASE}/health`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(setHealth)
-      .catch((e) => setError(String(e)));
-  }, []);
-
   return (
-    <div className="min-h-screen bg-pitch-900 text-white flex flex-col items-center justify-center gap-6 p-8">
-      <h1 className="text-4xl font-bold tracking-tight">
-        Scout OS <span className="text-pitch-500">⚽</span>
-      </h1>
-      <p className="text-white/70 max-w-md text-center">
-        AI-powered football scouting platform. Phase 0 scaffold — backend and
-        frontend are wired together.
-      </p>
-
-      <div className="rounded-lg border border-white/10 bg-white/5 px-6 py-4 min-w-[280px]">
-        <div className="text-sm uppercase tracking-wide text-white/50 mb-2">
-          Backend status
-        </div>
-        {health && (
-          <div className="text-pitch-500 font-mono">
-            ● {health.status} — {health.service} v{health.version}
-          </div>
-        )}
-        {error && <div className="text-red-400 font-mono">● {error}</div>}
-        {!health && !error && <div className="text-white/40">Connecting…</div>}
-      </div>
-    </div>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<Home />} />
+        <Route path="squad" element={<SquadAnalyzer />} />
+        <Route path="login" element={<Login />} />
+        <Route path="player/:id" element={<PlayerLayout />}>
+          <Route index element={<PlayerOverview />} />
+          <Route path="similar" element={<SimilarPlayers />} />
+          <Route path="clubs" element={<ClubFinder />} />
+          <Route path="career" element={<CareerSimulator />} />
+        </Route>
+      </Route>
+    </Routes>
   );
 }
