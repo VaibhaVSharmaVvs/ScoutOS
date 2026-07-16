@@ -167,10 +167,13 @@ ScoutOS/
 | Squad Analyzer | Squad upload → weak positions, imbalance, transfer recs |
 | Career Simulator | "What if X joined Y?" → projected goals/assists/value/chemistry |
 
-- [ ] React Query for data fetching/caching; Recharts (or ECharts) for radar/line charts
-- [ ] Debounced search-as-you-type against `/search`
-- [ ] Loading/error/empty states on every page
-- [ ] Auth flow (login/register) wired to backend JWT
+- [x] React Query for data fetching/caching; Recharts for radar/line charts
+- [x] Debounced search-as-you-type against `/players/search`
+- [x] Loading/error/empty states on every page
+- [x] Auth flow (login/register) wired to backend JWT
+
+**DONE** (@ 1236d00). All six pages built (Player Profile uses nested tabs: Overview / Similar / Club Fit / Career). Verified: `npm run build` (tsc + vite) clean, backend + built frontend boot together, CORS OK.
+Scope notes: **heatmap deferred** (no event-level data — dropped in Phase 1 data acquisition); **Career Simulator** ships as the value-trajectory projection (the "what if X joined Y" chemistry angle is covered by the Club Fit page); AI report uses the Phase 6 **stub** until an `ANTHROPIC_API_KEY` is set (UI labels it). Support endpoints added: `/players/{id}/radar`, `/players/{id}/market-values`, `/clubs?q=`.
 
 ---
 
