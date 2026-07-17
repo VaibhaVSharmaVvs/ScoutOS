@@ -37,6 +37,19 @@ LATENT_DIM = 16
 EPOCHS, BATCH, LR = 120, 256, 1e-3
 RECENCY_DECAY = 0.7   # career weight: minutes * DECAY**(latest_year - season_year)
 OUT = Path("ml/artifacts/models") / MODEL_VERSION
+
+# Raw autoencoder cosines cluster tightly near 1.0 for a player's closest matches
+# (all top neighbours ~0.98-0.99), so shown as-is every result looks ~100%.
+# Map cosine -> an interpretable "style match" in [0,1]: anchor 1.0 = identical,
+# a fixed floor = unrelated, and raise to a power to spread the crowded top end.
+# Monotonic, so ranking is unchanged; only self (excluded) reaches 100%.
+SIM_FLOOR = 0.30
+SIM_GAMMA = 10
+
+
+def match_score(cosine: float) -> float:
+    n = max(0.0, min(1.0, (cosine - SIM_FLOOR) / (1.0 - SIM_FLOOR)))
+    return round(n**SIM_GAMMA, 3)
 torch.manual_seed(42)
 np.random.seed(42)
 
@@ -216,7 +229,7 @@ def find_similar(player_id: int, k: int = 10, mode: str = "current",
         seen.add(pid)
         entry = {"player": rows.at[j, "full_name"], "player_id": pid,
                  "position_group": rows.at[j, "position_group"],
-                 "similarity": round(float(score), 3)}
+                 "similarity": match_score(float(score))}
         if mode == "current":
             entry["season"] = int(rows.at[j, "start_year"])
         out.append(entry)

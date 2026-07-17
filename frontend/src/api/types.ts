@@ -113,9 +113,11 @@ export interface RadarResponse {
   player_id: number;
   season: string;
   position_group: string | null;
+  focus: string;
   metrics: RadarMetric[];
   strengths: string[];
   weaknesses: string[];
+  note: string | null;
 }
 
 export interface MarketValuePoint {

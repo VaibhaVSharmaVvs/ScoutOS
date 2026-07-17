@@ -27,12 +27,17 @@ export function PlayerOverview() {
     <div className="space-y-6">
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
-          <SectionTitle>Style profile (percentile vs position)</SectionTitle>
+          <SectionTitle>
+            {radar.data ? `${radar.data.focus} profile · percentile vs position` : "Style profile"}
+          </SectionTitle>
           {radar.isLoading && <Loading />}
           {radar.error && <ErrorState error={radar.error} />}
           {radar.data && (
             <>
               <StatRadar metrics={radar.data.metrics} />
+              {radar.data.note && (
+                <p className="mt-2 text-xs text-amber-300/70">{radar.data.note}</p>
+              )}
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <div className="text-white/40 mb-1">Strengths</div>
