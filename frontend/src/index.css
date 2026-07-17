@@ -64,6 +64,19 @@
   p {
     text-wrap: pretty;
   }
+  /* form controls are inset and dark by default — a safety net so an input can
+     never fall back to the UA white "field" background. */
+  input,
+  textarea,
+  select {
+    background-color: var(--input);
+    color: var(--ink);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--ink-muted);
+  }
+
   /* every dynamic figure is tabular so columns and deltas don't jump */
   .tnum {
     font-variant-numeric: tabular-nums;
