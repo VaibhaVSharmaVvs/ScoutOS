@@ -145,7 +145,13 @@ class ClubFitEngine:
                 **{f"{k}_fit": v for k, v in subs.items()}, "overall_fit": overall}
 
     def rank_clubs(self, player_id: int, top: int = 10) -> pd.DataFrame:
-        rows = [self.score(player_id, cid) for cid in self.club_name]
+        # exclude the player's current club — they already fit that system, so
+        # it's noise in a "where should they go next" ranking.
+        current = None
+        if player_id in self.players.index:
+            cur = self.players.loc[player_id].get("club_id")
+            current = int(cur) if pd.notna(cur) else None
+        rows = [self.score(player_id, cid) for cid in self.club_name if cid != current]
         rows = [r for r in rows if r]
         return pd.DataFrame(rows).sort_values("overall_fit", ascending=False).head(top)
 

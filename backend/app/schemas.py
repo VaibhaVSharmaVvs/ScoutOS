@@ -130,9 +130,11 @@ class RadarResponse(BaseModel):
     player_id: int
     season: str
     position_group: str | None = None
+    focus: str                 # which lens the axes use, e.g. "Attacking"
     metrics: list[RadarMetric]
     strengths: list[str]       # labels of top percentile metrics
     weaknesses: list[str]      # labels of bottom percentile metrics
+    note: str | None = None    # caveats (e.g. GK shot-stopping data unavailable)
 
 
 class PositionDepth(BaseModel):
