@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# NOTE: app/__init__.py bootstraps the repo root onto sys.path so the lazy
+# `ml`/`etl` imports in the serving layer resolve regardless of launch cwd.
 from app.api.analytics import router as analytics_router
 from app.api.auth import router as auth_router
 from app.api.discover import router as discover_router
