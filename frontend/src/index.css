@@ -2,6 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  ScoutOS — "Floodlit analyst terminal"
+  A cool near-black canvas (a pitch under floodlights), chalk-line structure
+  (pitch markings, not boxes), one refined-green accent used sparingly, and data
+  as the hero: tabular numerals, weight-driven hierarchy. One hue, lightness
+  shifts only.
+*/
+:root {
+  /* surfaces — a few % lightness apart, faint cool-green cast */
+  --canvas: #0b0f10;
+  --surface-1: #11171a; /* cards */
+  --surface-2: #172025; /* hover / raised */
+  --surface-3: #1d282d; /* popovers / overlays */
+  --input: #0a0e0f; /* inset — darker than surroundings */
+
+  /* chalk line-markings — hairlines that disappear until you look for them */
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.13);
+
+  /* single accent — refined pitch-green, ~10% of the screen.
+     RGB channels so Tailwind opacity modifiers (bg-accent/10) resolve. */
+  --accent: 52 211 153;
+  --accent-ink: #061a12; /* text on accent fills */
+  --accent-soft: rgba(52, 211, 153, 0.14);
+
+  /* text — four levels */
+  --ink: rgba(255, 255, 255, 0.92);
+  --ink-2: rgba(255, 255, 255, 0.6);
+  --ink-3: rgba(255, 255, 255, 0.4);
+  --ink-muted: rgba(255, 255, 255, 0.26);
+
+  /* semantic — RGB channels, same reason as accent */
+  --positive: 52 211 153;
+  --warning: 245 181 68;
+  --danger: 240 97 109;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
 @layer base {
   html,
   body,
@@ -9,7 +50,45 @@
     height: 100%;
   }
   body {
-    @apply bg-pitch-900 text-white antialiased;
-    font-family: Inter, system-ui, -apple-system, sans-serif;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: Geist, "Geist Fallback", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  /* headings read as crafted, not documents */
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  /* every dynamic figure is tabular so columns and deltas don't jump */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+  .font-mono {
+    font-family: "Geist Mono", ui-monospace, monospace;
+  }
+}
+
+@layer utilities {
+  /* the label voice: small, tracked, muted — a broadcast lower-third caption */
+  .eyebrow {
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

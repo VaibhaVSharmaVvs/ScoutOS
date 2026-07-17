@@ -15,23 +15,21 @@ const FEATURED = [
 
 export function Home() {
   return (
-    <div className="flex flex-col items-center gap-10 py-8">
-      <div className="text-center max-w-2xl">
-        <h1 className="text-4xl font-bold tracking-tight mb-3">Scout smarter.</h1>
-        <p className="text-white/60">
-          AI-powered scouting across Europe’s top five leagues — market value, potential,
-          playing style, position, and club fit, each explained by the model’s own drivers.
+    <div className="flex flex-col items-center gap-10 py-10">
+      <div className="max-w-2xl text-center">
+        <h1 className="mb-3 text-h1 font-semibold">Scout smarter.</h1>
+        <p className="text-ink-2">
+          AI-powered scouting across Europe’s top five leagues — market value, potential, playing
+          style, position, and club fit, each explained by the model’s own drivers.
         </p>
       </div>
-      <div className="w-full flex justify-center">
+      <div className="flex w-full justify-center">
         <SearchBar autoFocus />
       </div>
 
       <div className="w-full">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-white/50 mb-3">
-          Featured players
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <h2 className="eyebrow mb-3">Featured players</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {FEATURED.map((name) => (
             <FeaturedCard key={name} name={name} />
           ))}
@@ -45,9 +43,9 @@ function FeaturedCard({ name }: { name: string }) {
   const { data } = usePlayerSearch(name);
   const hit = data?.find((p) => p.full_name === name) ?? data?.[0];
   const inner = (
-    <Card className="hover:border-pitch-400/50 transition-colors cursor-pointer h-full">
-      <div className="font-semibold">{name}</div>
-      <div className="text-xs text-white/40 mt-1">
+    <Card className="h-full cursor-pointer transition-colors hover:border-strong">
+      <div className="font-medium">{name}</div>
+      <div className="mt-1 text-caption text-ink-3">
         {hit ? `${hit.primary_position ?? "—"} · ${hit.nationality ?? "—"}` : "…"}
       </div>
     </Card>

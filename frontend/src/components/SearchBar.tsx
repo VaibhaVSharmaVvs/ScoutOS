@@ -21,6 +21,9 @@ export function SearchBar({ autoFocus = false }: { autoFocus?: boolean }) {
 
   return (
     <div className="relative w-full max-w-xl">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3">
+        <SearchIcon />
+      </span>
       <input
         autoFocus={autoFocus}
         value={q}
@@ -31,22 +34,22 @@ export function SearchBar({ autoFocus = false }: { autoFocus?: boolean }) {
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="Search players…"
-        className="w-full rounded-lg border border-white/15 bg-surface-800 px-4 py-3 text-white placeholder-white/40 outline-none focus:border-pitch-400"
+        className="w-full rounded-md border border-line bg-input py-2 pl-9 pr-3 text-sm text-ink placeholder-ink-muted outline-none transition-colors focus:border-accent/60"
       />
       {open && debounced.trim().length >= 2 && (
-        <div className="absolute z-20 mt-1 w-full rounded-lg border border-white/10 bg-surface-800 shadow-xl overflow-hidden">
-          {isFetching && <div className="px-4 py-3 text-white/40 text-sm">Searching…</div>}
+        <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-md border border-line bg-surface-overlay shadow-2xl shadow-black/40">
+          {isFetching && <div className="px-4 py-3 text-sm text-ink-muted">Searching…</div>}
           {!isFetching && data && data.length === 0 && (
-            <div className="px-4 py-3 text-white/40 text-sm">No players found.</div>
+            <div className="px-4 py-3 text-sm text-ink-muted">No players found.</div>
           )}
           {data?.map((p) => (
             <button
               key={p.id}
               onMouseDown={() => go(p.id)}
-              className="flex w-full items-center justify-between px-4 py-2.5 text-left hover:bg-white/5"
+              className="flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-white/[0.05]"
             >
-              <span className="text-white">{p.full_name}</span>
-              <span className="text-xs text-white/40">
+              <span className="text-sm text-ink">{p.full_name}</span>
+              <span className="text-caption text-ink-3">
                 {p.primary_position ?? "—"}
                 {p.nationality ? ` · ${p.nationality}` : ""}
               </span>
@@ -55,5 +58,14 @@ export function SearchBar({ autoFocus = false }: { autoFocus?: boolean }) {
         </div>
       )}
     </div>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+    </svg>
   );
 }
