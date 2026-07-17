@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import json
 from functools import lru_cache
-from pathlib import Path
 
 import faiss
 import numpy as np
@@ -29,6 +28,7 @@ from torch import nn
 
 from app.db.session import get_engine
 from etl.load.db import log
+from ml._paths import MODELS_DIR
 from ml.features.scaler import transform as scale_features
 
 MODEL_VERSION = "similarity_v1"
@@ -36,7 +36,9 @@ FEATURE_SET_VERSION = "v1"
 LATENT_DIM = 16
 EPOCHS, BATCH, LR = 120, 256, 1e-3
 RECENCY_DECAY = 0.7   # career weight: minutes * DECAY**(latest_year - season_year)
-OUT = Path("ml/artifacts/models") / MODEL_VERSION
+OUT = MODELS_DIR / MODEL_VERSION
+torch.manual_seed(42)
+np.random.seed(42)
 
 # Raw autoencoder cosines cluster tightly near 1.0 for a player's closest matches
 # (all top neighbours ~0.98-0.99), so shown as-is every result looks ~100%.
@@ -50,8 +52,6 @@ SIM_GAMMA = 10
 def match_score(cosine: float) -> float:
     n = max(0.0, min(1.0, (cosine - SIM_FLOOR) / (1.0 - SIM_FLOOR)))
     return round(n**SIM_GAMMA, 3)
-torch.manual_seed(42)
-np.random.seed(42)
 
 
 class AutoEncoder(nn.Module):
@@ -135,9 +135,9 @@ def _norm_index(Z_raw: np.ndarray):
 def _position_purity(pg, index, Z, k=5, sample=1500) -> float:
     rng = np.random.default_rng(0)
     rows = rng.choice(len(Z), size=min(sample, len(Z)), replace=False)
-    _, I = index.search(Z[rows], k + 1)
+    _, idxs = index.search(Z[rows], k + 1)
     hits = tot = 0
-    for r, neigh in zip(rows, I):
+    for r, neigh in zip(rows, idxs):
         for j in neigh:
             if j != r:
                 hits += pg[j] == pg[r]
@@ -220,9 +220,9 @@ def find_similar(player_id: int, k: int = 10, mode: str = "current",
         qi = int(q.sort_values("start_year").index[-1])       # latest season
 
     qpos = rows.at[qi, "position_group"]
-    D, I = index.search(Z[qi:qi + 1], min(len(rows), 250))
+    dists, idxs = index.search(Z[qi:qi + 1], min(len(rows), 250))
     seen, out = {player_id}, []
-    for score, j in zip(D[0], I[0]):
+    for score, j in zip(dists[0], idxs[0]):
         pid = int(rows.at[j, "player_id"])
         if pid in seen or (same_position and rows.at[j, "position_group"] != qpos):
             continue

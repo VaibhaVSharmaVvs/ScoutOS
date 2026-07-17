@@ -12,7 +12,6 @@ Explainability: LightGBM gain importance + SHAP top features.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import joblib
 import lightgbm as lgb
@@ -21,6 +20,7 @@ import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 from etl.load.db import log
+from ml._paths import MODELS_DIR
 from ml.models.dataset import feature_columns, load_features, time_split
 
 MODEL_VERSION = "value_v1"
@@ -34,7 +34,7 @@ TEST_YEAR, VAL_YEAR = 2024, 2023  # 2024-25 test, 2023-24 val
 # transfer fees (transfers table) — a future value_v2 (see CLAUDE.md).
 CATEGORICALS = ["position_group", "league_id"]
 CONTEXT = ["age", "minutes", "club_elo", "league_strength"]
-OUT = Path("ml/artifacts/models") / MODEL_VERSION
+OUT = MODELS_DIR / MODEL_VERSION
 
 
 def _prep():

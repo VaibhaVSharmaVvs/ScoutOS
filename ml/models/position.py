@@ -15,7 +15,6 @@ macro-F1, per-class F1, top confusions, vs majority baseline.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import joblib
 import pandas as pd
@@ -25,12 +24,13 @@ from sklearn.model_selection import GroupShuffleSplit
 
 from app.db.session import get_engine
 from etl.load.db import log
+from ml._paths import MODELS_DIR
 from ml.models.dataset import feature_columns, load_features
 
 FEATURE_SET_VERSION = "v1"
 MIN_MINUTES = 450
 PLAYABLE_THRESHOLD = 0.15
-ART_ROOT = Path("ml/artifacts/models")
+ART_ROOT = MODELS_DIR
 
 # side-agnostic ROLE taxonomy
 ROLE_MAP = {

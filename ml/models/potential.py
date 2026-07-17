@@ -14,7 +14,6 @@ avoids leakage.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import joblib
 import lightgbm as lgb
@@ -24,6 +23,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 
 from app.db.session import get_engine
 from etl.load.db import log
+from ml._paths import MODELS_DIR
 from ml.models.dataset import feature_columns, load_features
 
 MODEL_VERSION = "potential_v1"
@@ -33,7 +33,7 @@ HORIZONS = [1, 3, 5]
 TOLERANCE_DAYS = 300
 CATEGORICALS = ["position_group", "league_id"]
 CONTEXT = ["age", "minutes", "club_elo", "league_strength", "cur_value_log"]
-OUT = Path("ml/artifacts/models") / MODEL_VERSION
+OUT = MODELS_DIR / MODEL_VERSION
 
 
 def _prep():

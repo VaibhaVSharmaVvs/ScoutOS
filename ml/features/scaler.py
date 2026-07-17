@@ -25,9 +25,10 @@ from sklearn.preprocessing import StandardScaler
 
 from app.db.session import get_engine
 from etl.load.db import log
+from ml._paths import ARTIFACTS
 from ml.features.build import FEATURE_SET_VERSION
 
-ARTIFACT_ROOT = Path("ml/artifacts")
+ARTIFACT_ROOT = ARTIFACTS
 
 
 def _base_feature_frame(version: str) -> pd.DataFrame:
