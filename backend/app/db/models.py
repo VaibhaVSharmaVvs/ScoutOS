@@ -14,13 +14,12 @@ Design notes:
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Date,
-    DateTime,
     Float,
     ForeignKey,
     Integer,
@@ -39,14 +38,39 @@ SOURCES = ("fbref", "fbref_kaggle", "understat", "transfermarkt", "clubelo", "st
 
 # --- Auth ---------------------------------------------------------------------
 class User(Base, TimestampMixin):
-    """API user. Single-role for now (Phase 5); expand to roles later."""
+    """API user. Passkey (WebAuthn) users have no email/password — they're
+    identified by `user_handle` and their registered credentials. The legacy
+    email/password columns stay nullable for backward compatibility."""
 
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    hashed_password: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str | None] = mapped_column(String(255), unique=True, index=True)
+    hashed_password: Mapped[str | None] = mapped_column(String(255))
+    # WebAuthn user handle (opaque, non-PII); base64url of random bytes
+    user_handle: Mapped[str | None] = mapped_column(String(255), unique=True, index=True)
+    display_name: Mapped[str | None] = mapped_column(String(64))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+
+    credentials: Mapped[list[WebAuthnCredential]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class WebAuthnCredential(Base, TimestampMixin):
+    """A registered passkey. We store only the public key + metadata — the
+    private key never leaves the user's device."""
+
+    __tablename__ = "webauthn_credentials"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    credential_id: Mapped[str] = mapped_column(String(512), unique=True, index=True)  # base64url
+    public_key: Mapped[str] = mapped_column(String(1024))  # base64url COSE key
+    sign_count: Mapped[int] = mapped_column(Integer, default=0)
+    transports: Mapped[str | None] = mapped_column(String(128))  # csv, e.g. "internal,hybrid"
+
+    user: Mapped[User] = relationship(back_populates="credentials")
 
 
 # --- Dimensions ---------------------------------------------------------------

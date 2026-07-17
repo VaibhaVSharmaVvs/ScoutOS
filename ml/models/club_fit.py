@@ -15,17 +15,17 @@ Weights live in config/club_fit_weights.json (tunable without redeploy).
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 from app.db.session import get_engine
 from etl.load.db import log
+from ml._paths import CLUB_FIT_CONFIG
 
 SEASON = "2024-25"
 FEATURE_SET_VERSION = "v1"
-CONFIG = Path("config/club_fit_weights.json")
+CONFIG = CLUB_FIT_CONFIG
 
 # (player per-90 feature, team-profile per-90 key) — the shared style dimensions
 STYLE_DIMS = [

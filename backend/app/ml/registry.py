@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from pathlib import Path
+
+from ml._paths import CLUB_FIT_CONFIG, MODELS_DIR
 
 log = logging.getLogger("scoutos.ml")
-ART = Path("ml/artifacts/models")
+ART = MODELS_DIR
 
 
 @lru_cache(maxsize=1)
@@ -67,5 +68,5 @@ def available() -> dict[str, bool]:
         "position_role": (ART / "position_v1" / "model.cbm").exists(),
         "position_side": (ART / "position_side_v1" / "model.cbm").exists(),
         "similarity": (ART / "similarity_v1" / "season_index.faiss").exists(),
-        "club_fit": Path("config/club_fit_weights.json").exists(),
+        "club_fit": CLUB_FIT_CONFIG.exists(),
     }

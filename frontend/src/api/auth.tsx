@@ -1,14 +1,16 @@
-// Minimal JWT auth context backed by localStorage + the backend /auth routes.
+// Auth context: passwordless via WebAuthn passkeys. The JWT (in localStorage) is
+// still the API credential; passkeys just replace how it's obtained.
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
-import { api, getToken, setToken } from "./client";
+import { getToken, setToken } from "./client";
+import { loginPasskey, registerPasskey } from "./passkey";
 
 interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  signIn: () => Promise<void>;
+  register: (displayName?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -17,19 +19,15 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setTok] = useState<string | null>(getToken());
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await api.postForm<{ access_token: string }>("/auth/login", {
-      username: email,
-      password,
-    });
-    setToken(res.access_token);
-    setTok(res.access_token);
+  const signIn = useCallback(async () => {
+    await loginPasskey();
+    setTok(getToken());
   }, []);
 
-  const register = useCallback(async (email: string, password: string) => {
-    await api.postJson("/auth/register", { email, password });
-    await login(email, password);
-  }, [login]);
+  const register = useCallback(async (displayName?: string) => {
+    await registerPasskey(displayName);
+    setTok(getToken());
+  }, []);
 
   const logout = useCallback(() => {
     setToken(null);
@@ -37,8 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ token, isAuthenticated: !!token, login, register, logout }),
-    [token, login, register, logout],
+    () => ({ token, isAuthenticated: !!token, signIn, register, logout }),
+    [token, signIn, register, logout],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
