@@ -27,11 +27,12 @@
   --accent-ink: #061a12; /* text on accent fills */
   --accent-soft: rgba(52, 211, 153, 0.14);
 
-  /* text — four levels */
-  --ink: rgba(255, 255, 255, 0.92);
-  --ink-2: rgba(255, 255, 255, 0.6);
-  --ink-3: rgba(255, 255, 255, 0.4);
-  --ink-muted: rgba(255, 255, 255, 0.26);
+  /* text — four levels. Contrast-checked on #0b0f10: ink-2/ink-3 clear AA for
+     body & meta; ink-muted is for placeholders/disabled only, never live copy. */
+  --ink: rgba(255, 255, 255, 0.94);
+  --ink-2: rgba(255, 255, 255, 0.74);
+  --ink-3: rgba(255, 255, 255, 0.6);
+  --ink-muted: rgba(255, 255, 255, 0.5);
 
   /* semantic — RGB channels, same reason as accent */
   --positive: 52 211 153;
@@ -88,15 +89,76 @@
 }
 
 @layer utilities {
-  /* the label voice: small, tracked, muted — a broadcast lower-third caption */
+  /* the label voice: small, tracked — a broadcast lower-third caption.
+     12px + ink-3 (60%) so it stays legible, not decorative. */
   .eyebrow {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-3);
     font-weight: 500;
   }
+
+  /* card navigation affordance — real hover lift (MED-06) */
+  .card-hover {
+    transition:
+      transform 0.15s cubic-bezier(0.23, 1, 0.32, 1),
+      border-color 0.15s cubic-bezier(0.23, 1, 0.32, 1),
+      box-shadow 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    border-color: var(--line-strong);
+    box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  }
+
+  /* first-paint entrance — staggered rise for grids/sections (LOW-04) */
+  .rise {
+    animation: rise 0.4s cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  /* route/tab content cross-fade */
+  .fade-in {
+    animation: fade 0.18s ease-out both;
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/* keyboard focus — one global ring in the brand accent (HIGH-05) */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* skip-to-content link, visible only when focused */
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--surface-3);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  transition: top 0.15s ease-out;
+}
+.skip-link:focus {
+  top: 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {

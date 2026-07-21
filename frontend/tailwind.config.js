@@ -42,7 +42,7 @@ export default {
       },
       fontSize: {
         // 14px base, ~1.25 ratio, rounded
-        caption: ["11px", { lineHeight: "14px" }],
+        caption: ["12px", { lineHeight: "15px" }],
         sm: ["13px", { lineHeight: "18px" }],
         base: ["14px", { lineHeight: "20px" }],
         h4: ["16px", { lineHeight: "22px" }],

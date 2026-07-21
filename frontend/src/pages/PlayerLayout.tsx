@@ -1,16 +1,23 @@
-import { NavLink, Outlet, useParams } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 
 import { usePlayer } from "../api/hooks";
-import { Badge, ErrorState, Loading } from "../components/ui";
+import { ApiError } from "../api/client";
+import { Badge, Loading } from "../components/ui";
+import { NotFound } from "./NotFound";
 import { money } from "../lib/format";
 
 export function PlayerLayout() {
   const { id } = useParams();
   const playerId = Number(id);
+  const navigate = useNavigate();
   const { data: p, isLoading, error } = usePlayer(playerId);
 
   if (isLoading) return <Loading label="Loading player" />;
-  if (error) return <ErrorState error={error} />;
+  // 404 -> real not-found state (nav survives); other errors bubble as not-found too
+  if (error) {
+    const notFound = error instanceof ApiError && error.status === 404;
+    return <NotFound what={notFound ? "We couldn’t find that player" : "Something went wrong"} />;
+  }
   if (!p) return null;
 
   const tabs = [
@@ -22,6 +29,12 @@ export function PlayerLayout() {
 
   return (
     <div>
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-4 text-caption text-ink-3 transition-colors hover:text-ink"
+      >
+        ← Back
+      </button>
       {/* hero: the player and their value lead; everything else is demoted.
           Sits on the canvas, separated by a chalk line — not boxed. */}
       <div className="flex flex-wrap items-end justify-between gap-6 pb-6">
@@ -38,14 +51,15 @@ export function PlayerLayout() {
             {p.international_caps != null && <span>· {p.international_caps} caps</span>}
           </div>
         </div>
+        {/* the one hero number, explicitly sourced (CRIT-03) */}
         <div className="text-right">
-          <div className="eyebrow mb-1.5">Market value</div>
+          <div className="eyebrow mb-1.5">Transfermarkt value</div>
           <div className="tnum text-display font-semibold text-accent">
             {money(p.market_value_eur)}
           </div>
           {p.highest_market_value_eur != null && (
             <div className="tnum mt-1 text-caption text-ink-3">
-              peak {money(p.highest_market_value_eur)}
+              career peak {money(p.highest_market_value_eur)}
             </div>
           )}
         </div>

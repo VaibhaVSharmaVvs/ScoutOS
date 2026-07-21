@@ -16,10 +16,19 @@ export function StatRadar({ metrics }: { metrics: RadarMetric[] }) {
     <ResponsiveContainer width="100%" height={300}>
       <RadarChart data={data} outerRadius="70%">
         <PolarGrid stroke="rgba(255,255,255,0.08)" />
-        <PolarAngleAxis dataKey="axis" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
+        <PolarAngleAxis dataKey="axis" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }} />
         {/* fixed 0 (centre) -> 100 (edge) so every player is on the same scale */}
         <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} tickCount={5} />
-        <Radar dataKey="pct" stroke="#34d399" fill="#34d399" fillOpacity={0.28} strokeWidth={2} />
+        <Radar
+          dataKey="pct"
+          stroke="#34d399"
+          fill="#34d399"
+          fillOpacity={0.28}
+          strokeWidth={2}
+          isAnimationActive
+          animationDuration={450}
+          animationEasing="ease-out"
+        />
         <Tooltip
           contentStyle={{
             background: "#1d282d",

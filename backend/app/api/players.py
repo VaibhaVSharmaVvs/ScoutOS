@@ -51,10 +51,12 @@ GK_NOTE = ("Shot-stopping data (saves, PSxG, clean sheets) isn't in our dataset 
            "this profiles distribution and sweeping only.")
 
 _SEARCH_SQL = text(
-    "select id, full_name, primary_position, nationality, birth_year, foot "
-    "from players "
-    "where full_name ilike :like or normalized_name ilike :like "
-    "order by (normalized_name ilike :prefix) desc, length(full_name) asc "
+    "select p.id, p.full_name, p.primary_position, p.nationality, p.birth_year, p.foot, "
+    "(select mv.value_eur from market_values mv where mv.player_id = p.id "
+    " order by mv.as_of desc limit 1) as market_value_eur "
+    "from players p "
+    "where p.full_name ilike :like or p.normalized_name ilike :like "
+    "order by (p.normalized_name ilike :prefix) desc, length(p.full_name) asc "
     "limit :limit"
 )
 

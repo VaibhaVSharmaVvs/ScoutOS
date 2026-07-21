@@ -5,6 +5,7 @@ import { CareerSimulator } from "./pages/CareerSimulator";
 import { ClubFinder } from "./pages/ClubFinder";
 import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
+import { NotFound } from "./pages/NotFound";
 import { PlayerLayout } from "./pages/PlayerLayout";
 import { PlayerOverview } from "./pages/PlayerOverview";
 import { SimilarPlayers } from "./pages/SimilarPlayers";
@@ -23,6 +24,8 @@ export default function App() {
           <Route path="clubs" element={<ClubFinder />} />
           <Route path="career" element={<CareerSimulator />} />
         </Route>
+        {/* catch-all lives INSIDE Layout so the navbar always survives (CRIT-01) */}
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

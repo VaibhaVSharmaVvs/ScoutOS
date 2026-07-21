@@ -22,12 +22,12 @@ export function ValueChart({ data, color = "#34d399" }: { data: ValuePoint[]; co
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
         <XAxis
           dataKey="label"
-          tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
+          tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
           axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
           tickLine={false}
         />
         <YAxis
-          tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
+          tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
           tickFormatter={(v) => money(v)}
           width={56}
           axisLine={false}
@@ -50,6 +50,9 @@ export function ValueChart({ data, color = "#34d399" }: { data: ValuePoint[]; co
           strokeWidth={2}
           dot={{ r: 3, fill: color, strokeWidth: 0 }}
           activeDot={{ r: 5, fill: color, strokeWidth: 0 }}
+          isAnimationActive
+          animationDuration={450}
+          animationEasing="ease-out"
         />
       </LineChart>
     </ResponsiveContainer>

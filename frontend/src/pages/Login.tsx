@@ -30,8 +30,8 @@ export function Login() {
   }
 
   return (
-    <div className="mx-auto max-w-sm py-12">
-      <Card>
+    <div className="mx-auto flex min-h-[70vh] max-w-sm items-center">
+      <Card className="w-full">
         <h1 className="mb-1 text-h3 font-semibold">Sign in</h1>
         <p className="mb-5 text-sm text-ink-3">
           Passwordless — use a passkey (Windows Hello, Touch ID, or your phone). No email, no

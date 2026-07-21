@@ -7,6 +7,7 @@ export interface PlayerHit {
   nationality: string | null;
   birth_year: number | null;
   foot: string | null;
+  market_value_eur: number | null;
 }
 
 export interface SeasonStat {
@@ -78,6 +79,8 @@ export interface SimilarPlayer {
   similarity: number;
   season: number | null;
   shared_traits: { feature: string; label: string }[] | null;
+  market_value_eur: number | null;
+  birth_year: number | null;
 }
 
 export interface SimilarResponse {
@@ -131,12 +134,21 @@ export interface ClubHit {
   country: string | null;
 }
 
+export interface SquadPlayer {
+  player_id: number;
+  name: string;
+  age: number | null;
+  minutes: number | null;
+  value_eur: number | null;
+}
+
 export interface PositionDepth {
   position_group: string;
   squad_size: number;
   regulars: number;
   avg_age: number | null;
   total_value_eur: number | null;
+  players: SquadPlayer[];
 }
 
 export interface SquadAnalysis {

@@ -1,12 +1,18 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../api/auth";
 import { SearchBar } from "./SearchBar";
 
 export function Layout() {
   const { isAuthenticated, logout } = useAuth();
+  const { pathname } = useLocation();
+  const isHome = pathname === "/";
+
   return (
     <div className="min-h-screen bg-canvas text-ink">
+      <a href="#content" className="skip-link">
+        Skip to content
+      </a>
       <header className="sticky top-0 z-30 border-b border-line bg-[rgb(11_15_16/0.85)] backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-5 px-5 py-3">
           <Wordmark />
@@ -14,8 +20,9 @@ export function Layout() {
             <NavItem to="/">Home</NavItem>
             <NavItem to="/squad">Squad Analyzer</NavItem>
           </nav>
+          {/* one global search — hidden on Home, where the hero field is the search */}
           <div className="flex flex-1 justify-center">
-            <SearchBar />
+            {!isHome && <SearchBar />}
           </div>
           {isAuthenticated ? (
             <button
@@ -31,7 +38,7 @@ export function Layout() {
           )}
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-5 py-7">
+      <main id="content" key={pathname} className="fade-in mx-auto max-w-6xl px-5 py-7">
         <Outlet />
       </main>
     </div>

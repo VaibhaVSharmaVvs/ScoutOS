@@ -11,7 +11,15 @@ import {
 import { DriverList } from "../components/DriverList";
 import { StatRadar } from "../components/StatRadar";
 import { ValueChart } from "../components/ValueChart";
-import { Badge, Card, Empty, ErrorState, Loading, SectionTitle } from "../components/ui";
+import {
+  Badge,
+  Card,
+  Empty,
+  ErrorState,
+  Skeleton,
+  SkeletonLines,
+  SectionTitle,
+} from "../components/ui";
 import { money } from "../lib/format";
 
 export function PlayerOverview() {
@@ -23,6 +31,12 @@ export function PlayerOverview() {
   const mv = useMarketValues(playerId);
   const explain = useExplain(playerId);
 
+  const est = value.data;
+  const deltaPct =
+    est?.actual_value_eur != null && est.actual_value_eur > 0
+      ? Math.round(((est.predicted_value_eur - est.actual_value_eur) / est.actual_value_eur) * 100)
+      : null;
+
   return (
     <div className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-2">
@@ -30,13 +44,13 @@ export function PlayerOverview() {
           <SectionTitle>
             {radar.data ? `${radar.data.focus} profile · percentile vs position` : "Style profile"}
           </SectionTitle>
-          {radar.isLoading && <Loading />}
-          {radar.error && <ErrorState error={radar.error} />}
+          {radar.isLoading && <Skeleton className="h-[300px] w-full rounded-md" />}
+          {radar.error && <ErrorState error={radar.error} onRetry={() => radar.refetch()} />}
           {radar.data && (
             <>
               <StatRadar metrics={radar.data.metrics} />
               {radar.data.note && (
-                <p className="mt-2 text-caption text-warning/80">{radar.data.note}</p>
+                <p className="mt-2 text-caption text-warning/90">{radar.data.note}</p>
               )}
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -45,7 +59,7 @@ export function PlayerOverview() {
                     {radar.data.strengths.length ? (
                       radar.data.strengths.map((s) => <Badge key={s} tone="accent">{s}</Badge>)
                     ) : (
-                      <span className="text-ink-muted">—</span>
+                      <span className="text-ink-3">—</span>
                     )}
                   </div>
                 </div>
@@ -55,7 +69,7 @@ export function PlayerOverview() {
                     {radar.data.weaknesses.length ? (
                       radar.data.weaknesses.map((s) => <Badge key={s} tone="warning">{s}</Badge>)
                     ) : (
-                      <span className="text-ink-muted">—</span>
+                      <span className="text-ink-3">—</span>
                     )}
                   </div>
                 </div>
@@ -65,23 +79,31 @@ export function PlayerOverview() {
         </Card>
 
         <Card>
-          <SectionTitle>Predicted market value</SectionTitle>
-          {value.isLoading && <Loading />}
-          {value.error && <ErrorState error={value.error} />}
-          {value.data && (
+          <SectionTitle>ScoutOS estimate</SectionTitle>
+          {value.isLoading && (
             <>
-              <div className="mb-5 flex items-baseline gap-3">
+              <Skeleton className="mb-5 h-8 w-40" />
+              <SkeletonLines rows={5} />
+            </>
+          )}
+          {value.error && <ErrorState error={value.error} onRetry={() => value.refetch()} />}
+          {est && (
+            <>
+              <div className="mb-1 flex items-baseline gap-3">
                 <span className="tnum text-h1 font-semibold text-ink">
-                  {money(value.data.predicted_value_eur)}
+                  {money(est.predicted_value_eur)}
                 </span>
-                {value.data.actual_value_eur != null && (
-                  <span className="tnum text-sm text-ink-3">
-                    listed {money(value.data.actual_value_eur)}
-                  </span>
-                )}
               </div>
+              {/* reconcile against the listed figure so the numbers don't seem to disagree (CRIT-03) */}
+              {deltaPct != null && (
+                <p className="mb-4 text-sm text-ink-3">
+                  {Math.abs(deltaPct)}% {deltaPct < 0 ? "below" : "above"} the{" "}
+                  {money(est.actual_value_eur)} Transfermarkt figure
+                  {est.drivers[0] && <> · biggest factor: {est.drivers[0].label}</>}
+                </p>
+              )}
               <div className="eyebrow mb-2.5">Top drivers</div>
-              <DriverList drivers={value.data.drivers} />
+              <DriverList drivers={est.drivers} />
             </>
           )}
         </Card>
@@ -90,7 +112,12 @@ export function PlayerOverview() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <SectionTitle>Potential · +3 years</SectionTitle>
-          {potential.isLoading && <Loading />}
+          {potential.isLoading && (
+            <>
+              <Skeleton className="mb-5 h-7 w-36" />
+              <SkeletonLines rows={4} />
+            </>
+          )}
           {potential.isError && <Empty>No current market value — growth can’t be projected.</Empty>}
           {potential.data && (
             <>
@@ -109,8 +136,8 @@ export function PlayerOverview() {
 
         <Card>
           <SectionTitle>Position · from playing style</SectionTitle>
-          {position.isLoading && <Loading />}
-          {position.error && <ErrorState error={position.error} />}
+          {position.isLoading && <SkeletonLines rows={3} />}
+          {position.error && <ErrorState error={position.error} onRetry={() => position.refetch()} />}
           {position.data && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -136,7 +163,7 @@ export function PlayerOverview() {
 
       <Card>
         <SectionTitle>Market-value history</SectionTitle>
-        {mv.isLoading && <Loading />}
+        {mv.isLoading && <Skeleton className="h-[240px] w-full rounded-md" />}
         {mv.data && mv.data.length > 1 ? (
           <ValueChart data={mv.data.map((d) => ({ label: d.as_of.slice(0, 7), value: d.value_eur }))} />
         ) : (
@@ -144,24 +171,68 @@ export function PlayerOverview() {
         )}
       </Card>
 
-      <Card>
-        <SectionTitle>AI scouting report</SectionTitle>
-        {explain.isLoading && <Loading label="Generating report" />}
-        {explain.error && <ErrorState error={explain.error} />}
-        {explain.data && (
-          <>
-            <p className="whitespace-pre-line leading-relaxed text-ink-2">
-              {explain.data.narrative}
-            </p>
-            {explain.data.provider !== "anthropic" && (
-              <p className="mt-3 text-caption text-warning/70">
-                Generated without an LLM (no API key configured) — this echoes the grounded model
-                outputs. Set ANTHROPIC_API_KEY on the backend for full narratives.
-              </p>
-            )}
-          </>
-        )}
-      </Card>
+      <ScoutingReport
+        provider={explain.data?.provider}
+        narrative={explain.data?.narrative}
+        loading={explain.isLoading}
+        value={est}
+        potential={potential.data}
+        position={position.data}
+      />
     </div>
+  );
+}
+
+/** AI report when a real LLM is wired; otherwise a clean grounded "Model
+ *  summary" built from the model outputs — never the raw dev stub (MED-05). */
+function ScoutingReport({
+  provider,
+  narrative,
+  loading,
+  value,
+  potential,
+  position,
+}: {
+  provider?: string;
+  narrative?: string;
+  loading: boolean;
+  value?: { predicted_value_eur: number; drivers: { label: string }[] };
+  potential?: { predicted_value_eur: number } | undefined;
+  position?: { primary: string; secondary: string | null } | undefined;
+}) {
+  const isReal = provider === "anthropic";
+  return (
+    <Card>
+      <div className="mb-3 flex items-center gap-2">
+        <h2 className="eyebrow">{isReal ? "AI scouting report" : "Model summary"}</h2>
+        {!isReal && !loading && <Badge>Full narrative unavailable</Badge>}
+      </div>
+      {loading && <SkeletonLines rows={4} />}
+      {!loading && isReal && (
+        <p className="whitespace-pre-line leading-relaxed text-ink-2">{narrative}</p>
+      )}
+      {!loading && !isReal && (
+        <ul className="space-y-2 text-sm text-ink-2">
+          {value && (
+            <li>
+              Model values the player at <b className="text-ink">{money(value.predicted_value_eur)}</b>
+              {value.drivers[0] && <> — driven most by {value.drivers[0].label}.</>}
+            </li>
+          )}
+          {potential && (
+            <li>
+              Projected to <b className="text-ink">{money(potential.predicted_value_eur)}</b> over the
+              next three years.
+            </li>
+          )}
+          {position && (
+            <li>
+              Reads as a <b className="text-ink">{position.primary}</b>
+              {position.secondary && <> (also {position.secondary})</> } from playing style.
+            </li>
+          )}
+        </ul>
+      )}
+    </Card>
   );
 }
