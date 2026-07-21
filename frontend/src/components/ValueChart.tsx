@@ -15,22 +15,42 @@ export interface ValuePoint {
   value: number;
 }
 
-export function ValueChart({ data, color = "#22c55e" }: { data: ValuePoint[]; color?: string }) {
+export function ValueChart({ data, color = "#34d399" }: { data: ValuePoint[]; color?: string }) {
   return (
     <ResponsiveContainer width="100%" height={240}>
       <LineChart data={data} margin={{ top: 10, right: 16, bottom: 0, left: 8 }}>
-        <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-        <XAxis dataKey="label" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} />
+        <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+        <XAxis
+          dataKey="label"
+          tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
+          axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+          tickLine={false}
+        />
         <YAxis
-          tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }}
+          tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
           tickFormatter={(v) => money(v)}
           width={56}
+          axisLine={false}
+          tickLine={false}
         />
         <Tooltip
-          contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }}
+          cursor={{ stroke: "rgba(255,255,255,0.13)" }}
+          contentStyle={{
+            background: "#1d282d",
+            border: "1px solid rgba(255,255,255,0.13)",
+            borderRadius: 8,
+            fontSize: 12,
+          }}
           formatter={(v) => [money(Number(v)), "value"]}
         />
-        <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2} dot={{ r: 3 }} />
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke={color}
+          strokeWidth={2}
+          dot={{ r: 3, fill: color, strokeWidth: 0 }}
+          activeDot={{ r: 5, fill: color, strokeWidth: 0 }}
+        />
       </LineChart>
     </ResponsiveContainer>
   );

@@ -30,16 +30,16 @@ export function Login() {
   }
 
   return (
-    <div className="max-w-sm mx-auto py-10">
+    <div className="mx-auto max-w-sm py-12">
       <Card>
-        <h1 className="text-xl font-bold mb-1">Sign in</h1>
-        <p className="text-sm text-white/50 mb-5">
-          Passwordless — use a passkey (Windows Hello, Touch ID, or your phone). No email,
-          no password.
+        <h1 className="mb-1 text-h3 font-semibold">Sign in</h1>
+        <p className="mb-5 text-sm text-ink-3">
+          Passwordless — use a passkey (Windows Hello, Touch ID, or your phone). No email, no
+          password.
         </p>
 
         {!supported && (
-          <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
+          <div className="mb-4 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning">
             This browser doesn’t support passkeys. Try a recent Chrome, Edge, or Safari.
           </div>
         )}
@@ -47,30 +47,31 @@ export function Login() {
         <button
           onClick={() => run("signin")}
           disabled={!supported || busy !== null}
-          className="w-full rounded-lg bg-pitch-500 py-2.5 font-medium hover:bg-pitch-600 disabled:opacity-50"
+          className="w-full rounded-md bg-accent py-2.5 font-medium text-accent-ink transition-transform duration-150 ease-out hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
         >
           {busy === "signin" ? "Waiting for passkey…" : "Sign in with a passkey"}
         </button>
 
-        <div className="my-5 flex items-center gap-3 text-xs text-white/30">
-          <span className="h-px flex-1 bg-white/10" /> first time here? <span className="h-px flex-1 bg-white/10" />
+        <div className="my-5 flex items-center gap-3 text-caption text-ink-muted">
+          <span className="h-px flex-1 bg-[var(--line)]" /> first time here?{" "}
+          <span className="h-px flex-1 bg-[var(--line)]" />
         </div>
 
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Name this device (optional)"
-          className="w-full mb-3 rounded-lg border border-white/15 bg-surface-800 px-3 py-2.5 outline-none focus:border-pitch-400"
+          className="mb-3 w-full rounded-md border border-line bg-input px-3 py-2.5 text-sm text-ink placeholder-ink-muted outline-none transition-colors focus:border-accent/60"
         />
         <button
           onClick={() => run("register")}
           disabled={!supported || busy !== null}
-          className="w-full rounded-lg border border-white/15 py-2.5 font-medium hover:bg-white/5 disabled:opacity-50"
+          className="w-full rounded-md border border-strong py-2.5 font-medium transition-colors hover:bg-white/[0.05] active:scale-[0.98] disabled:opacity-50"
         >
           {busy === "register" ? "Creating passkey…" : "Create a passkey"}
         </button>
 
-        {error && <div className="mt-4 text-sm text-red-400">{error}</div>}
+        {error && <div className="mt-4 text-sm text-danger">{error}</div>}
       </Card>
     </div>
   );

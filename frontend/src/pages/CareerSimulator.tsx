@@ -10,7 +10,7 @@ export function CareerSimulator() {
   const playerId = Number(useParams().id);
   const { data, isLoading, isError } = useCareerSim(playerId);
 
-  if (isLoading) return <Loading label="Simulating trajectory…" />;
+  if (isLoading) return <Loading label="Simulating trajectory" />;
   if (isError || !data) return <Empty>No current market value — trajectory can’t be simulated.</Empty>;
 
   const chart = data.trajectory
@@ -22,15 +22,18 @@ export function CareerSimulator() {
       <Card>
         <SectionTitle>Projected value trajectory</SectionTitle>
         <ValueChart data={chart} />
-        <div className="mt-4 flex gap-4">
+        <div className="mt-5 flex gap-4 border-t border-line pt-4">
           {data.trajectory.map((p) => (
             <div key={p.label} className="flex-1 text-center">
-              <div className="text-xs text-white/40">{p.label}{p.age ? ` · age ${p.age}` : ""}</div>
-              <div className="text-lg font-bold text-pitch-400">{money(p.value_eur)}</div>
+              <div className="eyebrow mb-1">
+                {p.label}
+                {p.age ? ` · age ${p.age}` : ""}
+              </div>
+              <div className="tnum text-h3 font-semibold text-accent">{money(p.value_eur)}</div>
             </div>
           ))}
         </div>
-        <p className="mt-4 text-xs text-white/40">{data.note}</p>
+        <p className="mt-4 text-caption text-ink-muted">{data.note}</p>
       </Card>
 
       {data.trajectory

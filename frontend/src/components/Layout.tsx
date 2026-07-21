@@ -6,34 +6,50 @@ import { SearchBar } from "./SearchBar";
 export function Layout() {
   const { isAuthenticated, logout } = useAuth();
   return (
-    <div className="min-h-screen bg-pitch-900 text-white">
-      <header className="border-b border-white/10 bg-surface-900/70 backdrop-blur sticky top-0 z-30">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-4">
-          <Link to="/" className="text-xl font-bold tracking-tight whitespace-nowrap">
-            Scout OS <span className="text-pitch-400">⚽</span>
-          </Link>
-          <nav className="hidden md:flex gap-1 text-sm">
+    <div className="min-h-screen bg-canvas text-ink">
+      <header className="sticky top-0 z-30 border-b border-line bg-[rgb(11_15_16/0.85)] backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center gap-5 px-5 py-3">
+          <Wordmark />
+          <nav className="hidden gap-0.5 text-sm md:flex">
             <NavItem to="/">Home</NavItem>
             <NavItem to="/squad">Squad Analyzer</NavItem>
           </nav>
-          <div className="flex-1 flex justify-center">
+          <div className="flex flex-1 justify-center">
             <SearchBar />
           </div>
           {isAuthenticated ? (
-            <button onClick={logout} className="text-sm text-white/60 hover:text-white">
+            <button
+              onClick={logout}
+              className="text-sm text-ink-3 transition-colors hover:text-ink"
+            >
               Log out
             </button>
           ) : (
-            <NavLink to="/login" className="text-sm text-white/60 hover:text-white">
-              Log in
+            <NavLink to="/login" className="text-sm text-ink-3 transition-colors hover:text-ink">
+              Sign in
             </NavLink>
           )}
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-5 py-7">
         <Outlet />
       </main>
     </div>
+  );
+}
+
+function Wordmark() {
+  return (
+    <Link to="/" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+      {/* centre-circle mark — a pitch marking, not an emoji */}
+      <span className="relative grid h-6 w-6 place-items-center rounded-full border border-strong">
+        <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+        <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[var(--line-strong)]" />
+      </span>
+      <span className="text-h4 font-semibold tracking-tight">
+        Scout<span className="text-accent">OS</span>
+      </span>
+    </Link>
   );
 }
 
@@ -42,7 +58,9 @@ function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `rounded px-3 py-1.5 ${isActive ? "bg-white/10 text-white" : "text-white/60 hover:text-white"}`
+        `rounded-sm px-3 py-1.5 transition-colors ${
+          isActive ? "bg-white/[0.06] text-ink" : "text-ink-3 hover:text-ink"
+        }`
       }
     >
       {children}

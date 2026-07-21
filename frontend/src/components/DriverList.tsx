@@ -1,23 +1,25 @@
-// Signed model driving-factors: green = pushes up, red = pushes down.
+// Signed model driving-factors: accent = pushes up, red = pushes down.
 
 import type { Driver } from "../api/types";
 
 export function DriverList({ drivers }: { drivers: Driver[] }) {
   const max = Math.max(...drivers.map((d) => d.weight), 0.001);
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-2.5">
       {drivers.map((d) => {
         const up = d.effect !== "decreases";
         return (
           <li key={d.feature} className="flex items-center gap-3">
-            <span className="w-40 shrink-0 text-sm text-white/70 capitalize">{d.label}</span>
-            <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
+            <span className="w-36 shrink-0 truncate text-sm text-ink-2">{d.label}</span>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
               <div
-                className={`h-full rounded-full ${up ? "bg-pitch-400" : "bg-red-400"}`}
+                className={`h-full rounded-full ${up ? "bg-accent" : "bg-danger"}`}
                 style={{ width: `${(d.weight / max) * 100}%` }}
               />
             </div>
-            <span className={`text-xs w-16 text-right ${up ? "text-pitch-400" : "text-red-400"}`}>
+            <span
+              className={`tnum w-14 text-right text-caption ${up ? "text-accent" : "text-danger"}`}
+            >
               {up ? "▲" : "▼"} {d.weight.toFixed(2)}
             </span>
           </li>

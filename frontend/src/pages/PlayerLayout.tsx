@@ -9,7 +9,7 @@ export function PlayerLayout() {
   const playerId = Number(id);
   const { data: p, isLoading, error } = usePlayer(playerId);
 
-  if (isLoading) return <Loading label="Loading player…" />;
+  if (isLoading) return <Loading label="Loading player" />;
   if (error) return <ErrorState error={error} />;
   if (!p) return null;
 
@@ -21,40 +21,47 @@ export function PlayerLayout() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-white/10 bg-surface-800/60 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">{p.full_name}</h1>
-            <div className="mt-2 flex flex-wrap gap-2 text-sm text-white/60">
-              {p.primary_position && <Badge>{p.primary_position}</Badge>}
-              {p.nationality && <span>{p.nationality}</span>}
-              {p.foot && <span>· {p.foot}-footed</span>}
-              {p.height_cm && <span>· {p.height_cm} cm</span>}
-              {p.date_of_birth && <span>· b. {p.date_of_birth}</span>}
+    <div>
+      {/* hero: the player and their value lead; everything else is demoted.
+          Sits on the canvas, separated by a chalk line — not boxed. */}
+      <div className="flex flex-wrap items-end justify-between gap-6 pb-6">
+        <div>
+          <div className="eyebrow mb-2">
+            {p.primary_position ?? "Player"}
+            {p.nationality ? ` · ${p.nationality}` : ""}
+          </div>
+          <h1 className="text-h1 font-semibold">{p.full_name}</h1>
+          <div className="mt-2.5 flex flex-wrap items-center gap-2 text-sm text-ink-3">
+            {p.foot && <Badge>{p.foot}-footed</Badge>}
+            {p.height_cm && <span>{p.height_cm} cm</span>}
+            {p.date_of_birth && <span>· b. {p.date_of_birth}</span>}
+            {p.international_caps != null && <span>· {p.international_caps} caps</span>}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="eyebrow mb-1.5">Market value</div>
+          <div className="tnum text-display font-semibold text-accent">
+            {money(p.market_value_eur)}
+          </div>
+          {p.highest_market_value_eur != null && (
+            <div className="tnum mt-1 text-caption text-ink-3">
+              peak {money(p.highest_market_value_eur)}
             </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs uppercase tracking-wide text-white/40">Market value</div>
-            <div className="text-2xl font-bold text-pitch-400">{money(p.market_value_eur)}</div>
-            {p.highest_market_value_eur != null && (
-              <div className="text-xs text-white/40">peak {money(p.highest_market_value_eur)}</div>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-white/10">
+      <div className="flex gap-1 border-b border-line">
         {tabs.map((t) => (
           <NavLink
             key={t.to}
             to={t.to}
             end={t.end}
             className={({ isActive }) =>
-              `px-4 py-2 text-sm border-b-2 -mb-px ${
+              `-mb-px border-b-2 px-4 py-2.5 text-sm transition-colors ${
                 isActive
-                  ? "border-pitch-400 text-white"
-                  : "border-transparent text-white/50 hover:text-white"
+                  ? "border-accent text-ink"
+                  : "border-transparent text-ink-3 hover:text-ink"
               }`
             }
           >
@@ -63,7 +70,9 @@ export function PlayerLayout() {
         ))}
       </div>
 
-      <Outlet context={{ player: p }} />
+      <div className="pt-6">
+        <Outlet context={{ player: p }} />
+      </div>
     </div>
   );
 }

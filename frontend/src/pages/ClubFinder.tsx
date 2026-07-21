@@ -7,22 +7,24 @@ export function ClubFinder() {
   const playerId = Number(useParams().id);
   const { data, isLoading, error } = useClubFit(playerId);
 
-  if (isLoading) return <Loading label="Ranking club fits…" />;
+  if (isLoading) return <Loading label="Ranking club fits" />;
   if (error) return <ErrorState error={error} />;
   if (!data || data.results.length === 0) return <Empty>No club fits available for this player.</Empty>;
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-white/50">
+    <div className="space-y-5">
+      <p className="text-sm text-ink-3">
         Best-fitting clubs for {data.player}, scored on tactical style, squad need, affordability
-        and age profile.
+        and age profile. Current club excluded.
       </p>
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid gap-4 md:grid-cols-2">
         {data.results.map((c) => (
           <Card key={c.club}>
-            <div className="flex items-center justify-between mb-4">
-              <span className="font-semibold text-lg">{c.club}</span>
-              <span className="text-2xl font-bold text-pitch-400">{c.overall_fit.toFixed(0)}</span>
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-h4 font-medium">{c.club}</span>
+              <span className="tnum text-h2 font-semibold text-accent">
+                {c.overall_fit.toFixed(0)}
+              </span>
             </div>
             <div className="space-y-3">
               <ScoreBar label="Tactical" value={c.tactical_fit} />
