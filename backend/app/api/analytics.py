@@ -14,6 +14,7 @@ from app.schemas import (
     ClubHit,
     PositionDepth,
     SquadAnalysis,
+    SquadPlayer,
 )
 
 router = APIRouter(tags=["analytics"])
@@ -24,9 +25,10 @@ CAREER_HORIZONS = (1, 3)  # +5yr not trained (too few valuation pairs)
 POSITION_GROUPS = ("GK", "DEF", "MID", "FWD")
 
 _SQUAD_SQL = text(
-    "select pf.position_group, pf.age, pf.minutes, "
+    "select pf.player_id, p.full_name, pf.position_group, pf.age, pf.minutes, "
     "nullif(pf.market_value_eur,'NaN')::numeric as value "
     "from player_features pf join seasons s on s.id = pf.season_id "
+    "join players p on p.id = pf.player_id "
     "where pf.feature_set_version='v1' and s.label=:season and pf.club_id=:cid"
 )
 
@@ -73,10 +75,17 @@ def squad_analysis(
         vals = [float(r["value"]) for r in grp if r["value"] is not None]
         mins = sum((r["minutes"] or 0) for r in grp) or 1
         avg_age = sum((r["age"] or 0) * (r["minutes"] or 0) for r in grp) / mins
+        roster = sorted(grp, key=lambda r: r["minutes"] or 0, reverse=True)
         depth.append(PositionDepth(
             position_group=pg, squad_size=len(grp), regulars=len(regulars),
             avg_age=round(avg_age, 1) if avg_age else None,
             total_value_eur=sum(vals) if vals else None,
+            players=[SquadPlayer(
+                player_id=r["player_id"], name=r["full_name"],
+                age=round(float(r["age"]), 1) if r["age"] is not None else None,
+                minutes=r["minutes"],
+                value_eur=float(r["value"]) if r["value"] is not None else None,
+            ) for r in roster],
         ))
         tot_val += sum(vals)
         # a group with fewer than 2 regulars is thin depth

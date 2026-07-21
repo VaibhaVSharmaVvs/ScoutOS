@@ -12,17 +12,74 @@ export function Loading({ label = "Loading" }: { label?: string }) {
   );
 }
 
-export function ErrorState({ error }: { error: unknown }) {
-  const msg = error instanceof Error ? error.message : String(error);
+/** Skeleton block — shimmer shaped like the content it stands in for (HIGH-02). */
+export function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse rounded bg-white/[0.06] ${className}`} />;
+}
+
+export function SkeletonLines({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
-      Couldn’t load this — {msg}
+    <div className="space-y-2.5">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="h-1.5 flex-1" />
+        </div>
+      ))}
     </div>
   );
 }
 
+export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
+  const msg = error instanceof Error ? error.message : String(error);
+  return (
+    <div className="rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+      <div>Couldn’t load this — {msg}</div>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="mt-2 rounded-sm border border-danger/40 px-2.5 py-1 text-caption text-danger transition-colors hover:bg-danger/10"
+        >
+          Try again
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Small inline empty note — for a card body, not a whole page. */
 export function Empty({ children }: { children: ReactNode }) {
-  return <div className="py-10 text-center text-sm text-ink-muted">{children}</div>;
+  return <div className="py-8 text-center text-sm text-ink-3">{children}</div>;
+}
+
+/** Full empty state: pitch-marking glyph, headline, sub-line, optional action. */
+export function EmptyState({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-14 text-center">
+      <PitchGlyph />
+      <div className="text-h4 font-medium text-ink">{title}</div>
+      {hint && <div className="max-w-sm text-sm text-ink-3">{hint}</div>}
+      {children && <div className="mt-1 flex flex-wrap justify-center gap-2">{children}</div>}
+    </div>
+  );
+}
+
+function PitchGlyph() {
+  return (
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" className="text-ink-muted">
+      <rect x="2.5" y="6.5" width="35" height="27" rx="2" stroke="currentColor" strokeWidth="1.2" />
+      <line x1="20" y1="6.5" x2="20" y2="33.5" stroke="currentColor" strokeWidth="1.2" />
+      <circle cx="20" cy="20" r="5" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  );
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -56,19 +113,60 @@ export function Badge({
   );
 }
 
-/** 0–100 score meter. Accent when strong, amber mid, red weak. */
+/** Deterministic monogram avatar from a name — a stand-in crest (MED-03). */
+export function Monogram({ name, size = 36 }: { name: string; size?: number }) {
+  const initials = name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+  const hue = [...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+  return (
+    <span
+      className="grid shrink-0 place-items-center rounded-full font-semibold text-ink"
+      style={{
+        height: size,
+        width: size,
+        fontSize: size * 0.36,
+        background: `hsl(${hue} 24% 22%)`,
+        border: "1px solid var(--line-strong)",
+      }}
+    >
+      {initials}
+    </span>
+  );
+}
+
+const LEVELS = [
+  { min: 66, word: "strong", cls: "bg-accent text-accent" },
+  { min: 40, word: "fair", cls: "bg-warning text-warning" },
+  { min: 0, word: "weak", cls: "bg-danger text-danger" },
+] as const;
+
+export function scoreLevel(value: number, max = 100) {
+  const pct = (value / max) * 100;
+  return LEVELS.find((l) => pct >= l.min) ?? LEVELS[LEVELS.length - 1];
+}
+
+/** 0–100 score meter — colour AND a word, so quality isn't colour-only (HIGH-06). */
 export function ScoreBar({ label, value, max = 100 }: { label: string; value: number; max?: number }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
-  const color = pct >= 66 ? "bg-accent" : pct >= 40 ? "bg-warning" : "bg-danger";
+  const level = scoreLevel(value, max);
+  const [bar, text] = level.cls.split(" ");
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between">
         <span className="text-sm text-ink-2">{label}</span>
-        <span className="tnum text-sm font-medium text-ink">{value.toFixed(0)}</span>
+        <span className="flex items-baseline gap-1.5">
+          <span className={`text-caption ${text}`}>{level.word}</span>
+          <span className="tnum text-sm font-medium text-ink">{value.toFixed(0)}</span>
+        </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="relative h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+        {/* threshold tick at the strong/fair boundary (66) as a second cue */}
+        <span className="absolute inset-y-0 left-[66%] w-px bg-white/20" />
         <div
-          className={`h-full rounded-full ${color} transition-[width] duration-500 ease-out`}
+          className={`h-full rounded-full ${bar} transition-[width] duration-500 ease-out`}
           style={{ width: `${pct}%` }}
         />
       </div>

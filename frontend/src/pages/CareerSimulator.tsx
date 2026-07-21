@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useCareerSim } from "../api/hooks";
 import { DriverList } from "../components/DriverList";
 import { ValueChart } from "../components/ValueChart";
-import { Card, Empty, Loading, SectionTitle } from "../components/ui";
+import { Card, EmptyState, Loading, SectionTitle } from "../components/ui";
 import { money } from "../lib/format";
 
 export function CareerSimulator() {
@@ -11,7 +11,8 @@ export function CareerSimulator() {
   const { data, isLoading, isError } = useCareerSim(playerId);
 
   if (isLoading) return <Loading label="Simulating trajectory" />;
-  if (isError || !data) return <Empty>No current market value — trajectory can’t be simulated.</Empty>;
+  if (isError || !data)
+    return <EmptyState title="No trajectory to simulate" hint="This player has no current market value, so future value can’t be projected." />;
 
   const chart = data.trajectory
     .filter((p) => p.value_eur != null)

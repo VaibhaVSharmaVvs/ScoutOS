@@ -13,6 +13,7 @@ class PlayerHit(BaseModel):
     nationality: str | None = None
     birth_year: int | None = None
     foot: str | None = None
+    market_value_eur: float | None = None
 
 
 class SeasonStat(BaseModel):
@@ -84,6 +85,8 @@ class SimilarPlayer(BaseModel):
     similarity: float
     season: int | None = None
     shared_traits: list[dict] | None = None
+    market_value_eur: float | None = None
+    birth_year: int | None = None
 
 
 class SimilarResponse(BaseModel):
@@ -137,12 +140,21 @@ class RadarResponse(BaseModel):
     note: str | None = None    # caveats (e.g. GK shot-stopping data unavailable)
 
 
+class SquadPlayer(BaseModel):
+    player_id: int
+    name: str
+    age: float | None = None
+    minutes: int | None = None
+    value_eur: float | None = None
+
+
 class PositionDepth(BaseModel):
     position_group: str
     squad_size: int
     regulars: int          # players over the regular-minutes threshold
     avg_age: float | None = None
     total_value_eur: float | None = None
+    players: list[SquadPlayer] = []   # roster, minutes-sorted (LOW-02)
 
 
 class SquadAnalysis(BaseModel):

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
+from app.db.session import get_session
 from app.ml.registry import club_fit_engine
 from app.schemas import (
     ClubFit,
@@ -22,6 +25,7 @@ def similar_players(
     mode: str = Query("current", pattern="^(current|career)$"),
     same_position: bool = Query(False),
     explain: bool = Query(True, description="Attach shared style traits per neighbour"),
+    db: Session = Depends(get_session),
 ) -> SimilarResponse:
     from ml.models.similarity import find_similar
 
@@ -41,11 +45,24 @@ def similar_players(
                 if other is not None:
                     traits_by_pid[h["player_id"]] = _shared_traits(q, other, names)
 
+    # enrich cards with value + birth year in one query (MED-03)
+    ids = [h["player_id"] for h in hits]
+    meta = {
+        r["id"]: r
+        for r in db.execute(text(
+            "select p.id, p.birth_year, "
+            "(select mv.value_eur from market_values mv where mv.player_id = p.id "
+            " order by mv.as_of desc limit 1) as market_value_eur "
+            "from players p where p.id = any(:ids)"), {"ids": ids}).mappings()
+    }
+
     results = [
         SimilarPlayer(
             player_id=h["player_id"], player=h["player"],
             position_group=h.get("position_group"), similarity=h["similarity"],
             season=h.get("season"), shared_traits=traits_by_pid.get(h["player_id"]),
+            market_value_eur=(m := meta.get(h["player_id"], {})).get("market_value_eur"),
+            birth_year=m.get("birth_year"),
         )
         for h in hits
     ]
