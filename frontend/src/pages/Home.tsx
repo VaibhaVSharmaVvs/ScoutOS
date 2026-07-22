@@ -38,9 +38,27 @@ export function Home() {
           ))}
         </div>
       </div>
+
+      <div className="w-full border-t border-line pt-8">
+        <h2 className="eyebrow mb-4">What you get on every player</h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          {CAPABILITIES.map((c) => (
+            <div key={c.title}>
+              <div className="font-medium text-ink">{c.title}</div>
+              <p className="mt-1 text-sm text-ink-3">{c.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
+
+const CAPABILITIES = [
+  { title: "Value & potential", body: "A model estimate with the drivers behind it, and a three-year projection." },
+  { title: "Style & position", body: "A position-appropriate percentile profile and the roles the player fits." },
+  { title: "Similar players & club fit", body: "Stylistic matches and the clubs where a move makes sense." },
+];
 
 function FeaturedCard({ name, index }: { name: string; index: number }) {
   const { data } = usePlayerSearch(name);
@@ -56,7 +74,7 @@ function FeaturedCard({ name, index }: { name: string; index: number }) {
         </div>
       </div>
       <div className="text-right">
-        <div className="tnum text-sm font-semibold text-accent">{money(hit?.market_value_eur)}</div>
+        <div className="tnum text-sm font-semibold text-ink">{money(hit?.market_value_eur)}</div>
         {a && <div className="tnum text-caption text-ink-3">age {a}</div>}
       </div>
       <span className="text-ink-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink-2">→</span>

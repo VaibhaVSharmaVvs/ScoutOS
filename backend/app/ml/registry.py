@@ -45,6 +45,11 @@ def warmup() -> None:
         "club_fit": club_fit_engine,
         "similarity_current": lambda: _warm_similarity("current"),
         "similarity_career": lambda: _warm_similarity("career"),
+        # pre-load LightGBM boosters + SHAP explainers + style vectors so the
+        # first value/potential/explain request isn't a cold ~40s load.
+        "value_explainer": _warm_value,
+        "potential_explainer": _warm_potential,
+        "style_vectors": _warm_style_vectors,
     }
     for name, fn in steps.items():
         try:
@@ -58,6 +63,26 @@ def _warm_similarity(mode: str):
     from ml.models.similarity import _load_mode
 
     return _load_mode(mode)
+
+
+def _warm_value():
+    from ml.models.explain import _booster_and_explainer
+    from ml.models.value import OUT
+
+    return _booster_and_explainer(str(OUT / "model.txt"))
+
+
+def _warm_potential():
+    from ml.models.explain import _booster_and_explainer
+    from ml.models.potential import OUT
+
+    return _booster_and_explainer(str(OUT / "model_h3.txt"))
+
+
+def _warm_style_vectors():
+    from ml.models.explain import _style_vectors
+
+    return _style_vectors("v1")
 
 
 def available() -> dict[str, bool]:

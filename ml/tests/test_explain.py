@@ -22,8 +22,9 @@ def _driver_shape_ok(drivers):
 
 
 def test_label_fallback():
-    assert explain._label("goals_p90") == "goals/90"
-    assert explain._label("some_unknown_p90") == "some unknown/90"
+    assert explain._label("goals_p90") == "goals"              # mapped, human
+    assert explain._label("np_xg_p90") == "non-penalty xG"     # no more raw "np xg/90"
+    assert explain._label("some_unknown_p90") == "some unknown"  # clean fallback
 
 
 @pytest.mark.skipif(not (VALUE / "model.txt").exists(), reason="value model not trained")

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import {
   useExplain,
   useMarketValues,
+  usePlayer,
   usePosition,
   usePotential,
   useRadar,
@@ -30,11 +31,15 @@ export function PlayerOverview() {
   const position = usePosition(playerId);
   const mv = useMarketValues(playerId);
   const explain = useExplain(playerId);
+  const player = usePlayer(playerId); // reuse cached profile for the header's TM value
 
   const est = value.data;
+  // reconcile against the SAME Transfermarkt figure the header shows (CRIT-03),
+  // not the model's training-season snapshot.
+  const tmValue = player.data?.market_value_eur ?? est?.actual_value_eur ?? null;
   const deltaPct =
-    est?.actual_value_eur != null && est.actual_value_eur > 0
-      ? Math.round(((est.predicted_value_eur - est.actual_value_eur) / est.actual_value_eur) * 100)
+    tmValue != null && tmValue > 0 && est
+      ? Math.round(((est.predicted_value_eur - tmValue) / tmValue) * 100)
       : null;
 
   return (
@@ -94,11 +99,11 @@ export function PlayerOverview() {
                   {money(est.predicted_value_eur)}
                 </span>
               </div>
-              {/* reconcile against the listed figure so the numbers don't seem to disagree (CRIT-03) */}
+              {/* reconcile against the header's Transfermarkt value (CRIT-03) */}
               {deltaPct != null && (
                 <p className="mb-4 text-sm text-ink-3">
                   {Math.abs(deltaPct)}% {deltaPct < 0 ? "below" : "above"} the{" "}
-                  {money(est.actual_value_eur)} Transfermarkt figure
+                  {money(tmValue)} Transfermarkt value
                   {est.drivers[0] && <> · biggest factor: {est.drivers[0].label}</>}
                 </p>
               )}

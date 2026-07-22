@@ -9,6 +9,7 @@ import {
 } from "recharts";
 
 import { money } from "../lib/format";
+import { useReducedMotion } from "../lib/useReducedMotion";
 
 export interface ValuePoint {
   label: string;
@@ -16,6 +17,7 @@ export interface ValuePoint {
 }
 
 export function ValueChart({ data, color = "#34d399" }: { data: ValuePoint[]; color?: string }) {
+  const reduced = useReducedMotion();
   return (
     <ResponsiveContainer width="100%" height={240}>
       <LineChart data={data} margin={{ top: 10, right: 16, bottom: 0, left: 8 }}>
@@ -50,8 +52,8 @@ export function ValueChart({ data, color = "#34d399" }: { data: ValuePoint[]; co
           strokeWidth={2}
           dot={{ r: 3, fill: color, strokeWidth: 0 }}
           activeDot={{ r: 5, fill: color, strokeWidth: 0 }}
-          isAnimationActive
-          animationDuration={450}
+          isAnimationActive={!reduced}
+          animationDuration={550}
           animationEasing="ease-out"
         />
       </LineChart>

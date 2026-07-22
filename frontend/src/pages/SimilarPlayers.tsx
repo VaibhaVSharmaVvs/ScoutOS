@@ -49,7 +49,7 @@ export function SimilarPlayers() {
                         {a ? ` · age ${a}` : ""} · {money(s.market_value_eur)}
                       </div>
                     </div>
-                    <span className="tnum text-sm font-semibold text-accent">{pct(s.similarity)}</span>
+                    <span className="tnum text-sm font-semibold text-ink">{pct(s.similarity)}</span>
                   </div>
                   {s.shared_traits && s.shared_traits.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1">
