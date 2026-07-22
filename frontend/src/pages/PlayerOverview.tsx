@@ -22,6 +22,7 @@ import {
   SectionTitle,
 } from "../components/ui";
 import { money } from "../lib/format";
+import type { PositionPrediction } from "../api/types";
 
 export function PlayerOverview() {
   const playerId = Number(useParams().id);
@@ -141,28 +142,9 @@ export function PlayerOverview() {
 
         <Card>
           <SectionTitle>Position · from playing style</SectionTitle>
-          {position.isLoading && <SkeletonLines rows={3} />}
+          {position.isLoading && <SkeletonLines rows={4} />}
           {position.error && <ErrorState error={position.error} onRetry={() => position.refetch()} />}
-          {position.data && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Badge tone="accent">Primary · {position.data.primary}</Badge>
-                {position.data.secondary && <Badge>2nd · {position.data.secondary}</Badge>}
-              </div>
-              <div>
-                <div className="eyebrow mb-1.5">Playable</div>
-                <div className="flex flex-wrap gap-1">
-                  {position.data.playable.map((p) => <Badge key={p}>{p}</Badge>)}
-                </div>
-              </div>
-              {position.data.side_aware && (
-                <div className="text-sm text-ink-3">
-                  Side-aware ({position.data.side_aware.foot}-footed):{" "}
-                  <span className="text-ink">{position.data.side_aware.primary}</span>
-                </div>
-              )}
-            </div>
-          )}
+          {position.data && <PositionFit data={position.data} />}
         </Card>
       </div>
 
@@ -185,6 +167,43 @@ export function PlayerOverview() {
         position={position.data}
       />
     </div>
+  );
+}
+
+/** Ranked "role fit" from the model's per-position probabilities. Uses the
+ *  granular side-aware positions when foot is known, and shows only positions
+ *  the player is somewhat playable in (noise filtered relative to the top). */
+function PositionFit({ data }: { data: PositionPrediction }) {
+  const src = data.side_aware?.probs ?? data.probs;
+  const entries = Object.entries(src).sort((a, b) => b[1] - a[1]);
+  const top = entries[0]?.[1] ?? 1;
+  const ranked = entries
+    .filter(([, p]) => p >= 0.03 && p >= 0.1 * top)
+    .slice(0, 6)
+    .map(([name, p]) => ({ name, fit: Math.round(p * 100) }));
+
+  if (ranked.length === 0) return <div className="text-sm text-ink-3">No clear role from style.</div>;
+
+  return (
+    <>
+      <ol className="space-y-3">
+        {ranked.map((r, i) => (
+          <li key={r.name} className="flex items-center gap-3">
+            <span className="tnum w-5 shrink-0 text-caption text-ink-3">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <span className="w-28 shrink-0 text-sm text-ink">{r.name}</span>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+              <div className="h-full rounded-full bg-accent" style={{ width: `${r.fit}%` }} />
+            </div>
+            <span className="tnum w-8 shrink-0 text-right text-sm font-medium text-ink">{r.fit}</span>
+          </li>
+        ))}
+      </ol>
+      {data.side_aware && (
+        <p className="mt-3 text-caption text-ink-3">Side inferred from {data.side_aware.foot} foot.</p>
+      )}
+    </>
   );
 }
 
