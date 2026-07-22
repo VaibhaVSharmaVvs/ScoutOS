@@ -134,16 +134,16 @@ export function Feet({ foot }: { foot: string | null | undefined }) {
 function Foot({ fill, mirror = false }: { fill: string; mirror?: boolean }) {
   return (
     <svg
-      width="13" height="17" viewBox="0 0 24 30" fill={fill}
+      width="13" height="16" viewBox="0 0 24 30" fill={fill}
       style={mirror ? { transform: "scaleX(-1)" } : undefined}
     >
-      {/* sole (ball + heel) */}
-      <path d="M16 29c-2.6 0-4.1-1.9-4.1-4.7 0-2 .6-3.7.6-5.7 0-2.4-1.1-4-1.1-6.6C11.4 8.6 13.2 6 16.1 6 18.5 6 20.3 8.1 20.3 11.5c0 2.6-1.2 7-1.2 10.6 0 3.5-1.1 6.9-3.1 6.9z" />
-      {/* toes */}
-      <ellipse cx="8.4" cy="8" rx="2" ry="2.3" />
-      <ellipse cx="5.4" cy="12" rx="1.8" ry="2" />
-      <ellipse cx="4.7" cy="16" rx="1.7" ry="1.9" />
-      <ellipse cx="5.4" cy="19.8" rx="1.6" ry="1.8" />
+      {/* sole (ball down to heel) */}
+      <path d="M12 9c-3.7 0-5.9 3.4-5.9 8.4 0 5 2.2 10.6 5.9 10.6s5.9-5.6 5.9-10.6C17.9 12.4 15.7 9 12 9z" />
+      {/* toes arced across the top — big toe inner (left on a right foot) */}
+      <circle cx="7.4" cy="6.4" r="2.1" />
+      <circle cx="11.6" cy="4.5" r="1.8" />
+      <circle cx="15.4" cy="4.7" r="1.6" />
+      <circle cx="18.6" cy="6.3" r="1.4" />
     </svg>
   );
 }
