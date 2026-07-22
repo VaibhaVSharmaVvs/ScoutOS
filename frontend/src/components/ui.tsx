@@ -113,6 +113,41 @@ export function Badge({
   );
 }
 
+/** Preferred-foot icon: two feet, the strong foot(s) in accent, the other dim.
+ *  left/right -> one green foot; both -> both green. Renders nothing if unknown. */
+export function Feet({ foot }: { foot: string | null | undefined }) {
+  const f = (foot ?? "").toLowerCase();
+  if (!["left", "right", "both"].includes(f)) return null;
+  const leftOn = f === "left" || f === "both";
+  const rightOn = f === "right" || f === "both";
+  const label = f === "both" ? "Two-footed" : `${f[0].toUpperCase()}${f.slice(1)}-footed`;
+  const on = "rgb(var(--accent))";
+  const off = "rgba(255,255,255,0.20)";
+  return (
+    <span className="inline-flex items-center gap-0.5" title={label} aria-label={label}>
+      <Foot fill={leftOn ? on : off} mirror />
+      <Foot fill={rightOn ? on : off} />
+    </span>
+  );
+}
+
+function Foot({ fill, mirror = false }: { fill: string; mirror?: boolean }) {
+  return (
+    <svg
+      width="13" height="17" viewBox="0 0 24 30" fill={fill}
+      style={mirror ? { transform: "scaleX(-1)" } : undefined}
+    >
+      {/* sole (ball + heel) */}
+      <path d="M16 29c-2.6 0-4.1-1.9-4.1-4.7 0-2 .6-3.7.6-5.7 0-2.4-1.1-4-1.1-6.6C11.4 8.6 13.2 6 16.1 6 18.5 6 20.3 8.1 20.3 11.5c0 2.6-1.2 7-1.2 10.6 0 3.5-1.1 6.9-3.1 6.9z" />
+      {/* toes */}
+      <ellipse cx="8.4" cy="8" rx="2" ry="2.3" />
+      <ellipse cx="5.4" cy="12" rx="1.8" ry="2" />
+      <ellipse cx="4.7" cy="16" rx="1.7" ry="1.9" />
+      <ellipse cx="5.4" cy="19.8" rx="1.6" ry="1.8" />
+    </svg>
+  );
+}
+
 /** Deterministic monogram avatar from a name — a stand-in crest (MED-03). */
 export function Monogram({ name, size = 36 }: { name: string; size?: number }) {
   const initials = name
