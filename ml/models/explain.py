@@ -22,30 +22,65 @@ import joblib
 import numpy as np
 import pandas as pd
 
-# human-readable labels for feature names (fallback: prettified name)
+# Human scout-facing labels for every feature (no raw "np xg/90"). Used by the
+# driver lists AND the similar-player trait chips.
 LABELS = {
-    "club_elo": "club strength", "age": "age", "minutes": "minutes played",
-    "goals_p90": "goals/90", "assists_p90": "assists/90", "xg_p90": "xG/90",
-    "xa_p90": "xA/90", "xg_chain_p90": "xG chain/90", "sca_p90": "shot-creating actions/90",
-    "gca_p90": "goal-creating actions/90", "pass_prog_p90": "progressive passes/90",
-    "carries_prog_p90": "progressive carries/90", "tackles_p90": "tackles/90",
-    "interceptions_p90": "interceptions/90", "key_passes_p90": "key passes/90",
-    "pass_cmp_pct": "pass completion %", "shots_p90": "shots/90",
-    "take_ons_att_p90": "take-ons/90", "clearances_p90": "clearances/90",
+    # context
+    "club_elo": "club pedigree", "age": "age", "minutes": "minutes played",
     "league_strength": "league strength", "cur_value_log": "current value",
+    # attacking
+    "goals_p90": "goals", "assists_p90": "assists", "shots_p90": "shots",
+    "sot_p90": "shots on target", "xg_p90": "expected goals",
+    "np_xg_p90": "non-penalty xG", "npxg_p90": "non-penalty xG",
+    "xa_p90": "expected assists", "xag_p90": "expected assists",
+    "np_g_per_shot": "finishing (goals/shot)", "shot_accuracy": "shot accuracy",
+    # creation
+    "sca_p90": "shot-creating actions", "gca_p90": "goal-creating actions",
+    "key_passes_p90": "key passes", "ppa_p90": "passes into the box",
+    "xg_chain_p90": "attacking involvement", "xg_buildup_p90": "buildup involvement",
+    # passing
+    "pass_cmp_p90": "passes completed", "pass_att_p90": "passes attempted",
+    "pass_cmp_pct": "pass completion %", "pass_prog_p90": "progressive passes",
+    "prog_pass_dist_p90": "passing distance", "pass_final_third_p90": "final-third passes",
+    "prog_rec_p90": "progressive passes received",
+    # carrying / dribbling
+    "carries_p90": "carries", "carries_prog_p90": "progressive carries",
+    "carries_prog_dist_p90": "carry distance", "touches_p90": "touches",
+    "take_ons_att_p90": "take-ons attempted", "take_ons_succ_p90": "successful take-ons",
+    "take_on_pct": "take-on success %",
+    # defending
+    "tackles_p90": "tackles", "tackles_won_p90": "tackles won",
+    "interceptions_p90": "interceptions", "tkl_plus_int_p90": "tackles + interceptions",
+    "clearances_p90": "clearances", "blocks_p90": "blocks",
+    "recoveries_p90": "ball recoveries", "dribblers_challenged_p90": "dribblers challenged",
+    # aerial / discipline
+    "aerials_won_p90": "aerial duels won", "aerials_lost_p90": "aerial duels lost",
+    "aerial_win_pct": "aerial win %", "fouls_p90": "fouls committed",
+    "fouled_p90": "fouls won",
 }
 
 
 def _label(feat: str) -> str:
-    return LABELS.get(feat, feat.replace("_p90", "/90").replace("_", " "))
+    return LABELS.get(feat, feat.replace("_p90", "").replace("_", " "))
+
+
+@lru_cache(maxsize=8)
+def _booster_and_explainer(booster_path: str):
+    """Load a LightGBM booster + its SHAP explainer once (cached).
+
+    Loading the booster from disk and constructing the TreeExplainer on every
+    request cost ~seconds each; caching makes repeat predictions instant (fixes
+    the cold value/potential latency)."""
+    import lightgbm as lgb
+    import shap
+
+    booster = lgb.Booster(model_file=booster_path)
+    return booster, shap.TreeExplainer(booster)
 
 
 def _tree_drivers(booster_path, meta_path, feature_row: dict, top_n=6):
     """Prediction + top signed SHAP contributions for a LightGBM booster."""
-    import lightgbm as lgb
-    import shap
-
-    booster = lgb.Booster(model_file=str(booster_path))
+    booster, explainer = _booster_and_explainer(str(booster_path))
     meta = joblib.load(meta_path)
     cols = meta["feature_cols"]
     cats = meta.get("categoricals", [])
@@ -53,7 +88,7 @@ def _tree_drivers(booster_path, meta_path, feature_row: dict, top_n=6):
     for c in cols:
         X[c] = X[c].astype("category") if c in cats else pd.to_numeric(X[c], errors="coerce")
     pred_log = float(booster.predict(X)[0])
-    contrib = shap.TreeExplainer(booster).shap_values(X)[0]  # log-space contributions
+    contrib = explainer.shap_values(X)[0]  # log-space contributions
     order = np.argsort(np.abs(contrib))[::-1][:top_n]
     drivers = [{"feature": cols[i], "label": _label(cols[i]), "value": feature_row.get(cols[i]),
                 "effect": "increases" if contrib[i] >= 0 else "decreases",
@@ -96,10 +131,22 @@ def _style_vectors(version: str = "v1"):
 
 
 def _shared_traits(a, b, names, top_n=5) -> list[dict]:
-    """Style dims where BOTH players sit clearly above average (z>0.4)."""
+    """Style dims where BOTH players sit clearly above average (z>0.4).
+
+    Deduped by human label — near-duplicate features (np_xg / npxg both read
+    "non-penalty xG") shouldn't show twice."""
     shared = sorted(((names[i], min(a[i], b[i])) for i in range(len(names))
                      if a[i] > 0.4 and b[i] > 0.4), key=lambda kv: kv[1], reverse=True)
-    return [{"feature": f, "label": _label(f)} for f, _ in shared[:top_n]]
+    out, seen = [], set()
+    for f, _ in shared:
+        label = _label(f)
+        if label in seen:
+            continue
+        seen.add(label)
+        out.append({"feature": f, "label": label})
+        if len(out) >= top_n:
+            break
+    return out
 
 
 def explain_similarity(player_id: int, other_id: int, top_n=5) -> dict:

@@ -12,9 +12,10 @@ import {
 } from "recharts";
 
 import { useClubSearch, useSquadAnalysis } from "../api/hooks";
-import { Badge, Card, EmptyState, ErrorState, Loading, SectionTitle } from "../components/ui";
+import { Badge, Card, ErrorState, Loading, SectionTitle } from "../components/ui";
 import { money } from "../lib/format";
 import { useDebounced } from "../lib/useDebounced";
+import { useReducedMotion } from "../lib/useReducedMotion";
 import type { ClubHit, PositionDepth } from "../api/types";
 
 const SUGGESTIONS = ["Manchester City", "Arsenal", "Real Madrid", "Bayern Munich"];
@@ -36,28 +37,45 @@ export function SquadAnalyzer() {
         </p>
       </div>
 
-      <div className="relative max-w-md">
-        <input
-          value={club ? club.name : q}
-          onChange={(e) => {
-            setClub(null);
-            setQ(e.target.value);
-          }}
-          placeholder="Search clubs…"
-          className="w-full rounded-md border border-line bg-input px-3 py-2.5 text-sm text-ink placeholder-ink-muted outline-none transition-colors focus:border-accent/60"
-        />
-        {!club && debounced.trim().length >= 2 && (
-          <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-md border border-line bg-surface-overlay shadow-2xl shadow-black/40">
-            {search.isFetching && <div className="px-4 py-2 text-sm text-ink-muted">Searching…</div>}
-            {search.data?.length === 0 && <div className="px-4 py-2 text-sm text-ink-muted">No clubs.</div>}
-            {search.data?.map((c) => (
+      <div className="max-w-md">
+        <div className="relative">
+          <input
+            value={club ? club.name : q}
+            onChange={(e) => {
+              setClub(null);
+              setQ(e.target.value);
+            }}
+            placeholder="Search clubs…"
+            className="w-full rounded-md border border-line bg-input px-3 py-2.5 text-sm text-ink placeholder-ink-muted outline-none transition-colors focus:border-accent/60"
+          />
+          {!club && debounced.trim().length >= 2 && (
+            <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-md border border-line bg-surface-overlay shadow-2xl shadow-black/40">
+              {search.isFetching && <div className="px-4 py-2 text-sm text-ink-muted">Searching…</div>}
+              {search.data?.length === 0 && <div className="px-4 py-2 text-sm text-ink-muted">No clubs.</div>}
+              {search.data?.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => { setClub(c); setQ(""); }}
+                  className="flex w-full items-center justify-between px-4 py-2 text-left transition-colors hover:bg-white/[0.05]"
+                >
+                  <span className="text-sm">{c.name}</span>
+                  <span className="text-caption text-ink-3">{c.country}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* suggestions sit right under the field, not stranded mid-page (HIGH-04) */}
+        {!club && !squad.isLoading && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-caption text-ink-3">Try</span>
+            {SUGGESTIONS.map((s) => (
               <button
-                key={c.id}
-                onClick={() => { setClub(c); setQ(""); }}
-                className="flex w-full items-center justify-between px-4 py-2 text-left transition-colors hover:bg-white/[0.05]"
+                key={s}
+                onClick={() => setQ(s)}
+                className="rounded-sm border border-line bg-white/[0.04] px-2.5 py-1 text-caption text-ink-2 transition-colors hover:border-strong hover:text-ink"
               >
-                <span className="text-sm">{c.name}</span>
-                <span className="text-caption text-ink-3">{c.country}</span>
+                {s}
               </button>
             ))}
           </div>
@@ -98,19 +116,6 @@ export function SquadAnalyzer() {
         </div>
       )}
 
-      {!club && !squad.isLoading && (
-        <EmptyState title="Analyze a squad" hint="Search for a club, or start with one of these.">
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              onClick={() => setQ(s)}
-              className="rounded-sm border border-line bg-white/[0.04] px-2.5 py-1 text-caption text-ink-2 transition-colors hover:border-strong hover:text-ink"
-            >
-              {s}
-            </button>
-          ))}
-        </EmptyState>
-      )}
     </div>
   );
 }
@@ -160,6 +165,7 @@ const POS_COLOR: Record<string, string> = {
 };
 
 function DepthScatter({ depth }: { depth: PositionDepth[] }) {
+  const reduced = useReducedMotion();
   return (
     <ResponsiveContainer width="100%" height={260}>
       <ScatterChart margin={{ top: 8, right: 16, bottom: 4, left: 8 }}>
@@ -190,6 +196,9 @@ function DepthScatter({ depth }: { depth: PositionDepth[] }) {
             data={d.players.map((p) => ({ age: p.age, value: p.value_eur, name: p.name }))}
             fill={POS_COLOR[d.position_group] ?? "#8b95a1"}
             fillOpacity={0.85}
+            isAnimationActive={!reduced}
+            animationDuration={550}
+            animationEasing="ease-out"
           />
         ))}
       </ScatterChart>

@@ -30,7 +30,7 @@ export function CareerSimulator() {
                 {p.label}
                 {p.age ? ` · age ${p.age}` : ""}
               </div>
-              <div className="tnum text-h3 font-semibold text-accent">{money(p.value_eur)}</div>
+              <div className="tnum text-h3 font-semibold text-ink">{money(p.value_eur)}</div>
             </div>
           ))}
         </div>

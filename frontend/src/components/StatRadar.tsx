@@ -9,8 +9,10 @@ import {
 } from "recharts";
 
 import type { RadarMetric } from "../api/types";
+import { useReducedMotion } from "../lib/useReducedMotion";
 
 export function StatRadar({ metrics }: { metrics: RadarMetric[] }) {
+  const reduced = useReducedMotion();
   const data = metrics.map((m) => ({ axis: m.label, pct: Math.round(m.percentile * 100) }));
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -25,8 +27,8 @@ export function StatRadar({ metrics }: { metrics: RadarMetric[] }) {
           fill="#34d399"
           fillOpacity={0.28}
           strokeWidth={2}
-          isAnimationActive
-          animationDuration={450}
+          isAnimationActive={!reduced}
+          animationDuration={550}
           animationEasing="ease-out"
         />
         <Tooltip
