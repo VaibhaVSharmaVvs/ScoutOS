@@ -170,13 +170,16 @@ export function Avatar({
       alt={name}
       loading="lazy"
       onError={() => setFailed(true)}
-      className="shrink-0 object-cover object-top"
+      className="shrink-0 object-cover"
       style={{
         height: size,
         width: size,
         borderRadius: radius,
         border: "1px solid var(--line-strong)",
         background: "var(--surface-2)",
+        // TM portraits are head-and-shoulders; top-align frames the full head
+        // centred. Inline (not a Tailwind class) so it can't be purged/overridden.
+        objectPosition: "center top",
       }}
     />
   );
