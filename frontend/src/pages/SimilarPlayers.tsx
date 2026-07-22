@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { useSimilar } from "../api/hooks";
-import { Badge, Card, EmptyState, ErrorState, Loading, Monogram } from "../components/ui";
+import { Avatar, Badge, Card, EmptyState, ErrorState, Loading } from "../components/ui";
 import { age, money, pct } from "../lib/format";
 
 export function SimilarPlayers() {
@@ -41,7 +41,7 @@ export function SimilarPlayers() {
               <Link to={`/player/${s.player_id}`}>
                 <Card className="card-hover group h-full">
                   <div className="flex items-center gap-3">
-                    <Monogram name={s.player} size={32} />
+                    <Avatar src={s.image_url} name={s.player} size={32} />
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">{s.player}</div>
                       <div className="tnum mt-0.5 truncate text-caption text-ink-3">

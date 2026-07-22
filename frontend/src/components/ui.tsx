@@ -1,7 +1,7 @@
 // Shared primitives for the floodlit terminal: quiet surfaces, chalk-line
 // structure, one accent, tabular data. States are first-class.
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 export function Loading({ label = "Loading" }: { label?: string }) {
   return (
@@ -148,8 +148,50 @@ function Foot({ fill, mirror = false }: { fill: string; mirror?: boolean }) {
   );
 }
 
+/** Player photo when we have one, else a monogram fallback (and on load error).
+ *  `shape` circle for list icons, rounded for the larger profile portrait. */
+export function Avatar({
+  src,
+  name,
+  size = 36,
+  shape = "circle",
+}: {
+  src?: string | null;
+  name: string;
+  size?: number;
+  shape?: "circle" | "rounded";
+}) {
+  const [failed, setFailed] = useState(false);
+  const radius = shape === "circle" ? "9999px" : "var(--radius-md)";
+  if (!src || failed) return <Monogram name={name} size={size} shape={shape} />;
+  return (
+    <img
+      src={src}
+      alt={name}
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="shrink-0 object-cover object-top"
+      style={{
+        height: size,
+        width: size,
+        borderRadius: radius,
+        border: "1px solid var(--line-strong)",
+        background: "var(--surface-2)",
+      }}
+    />
+  );
+}
+
 /** Deterministic monogram avatar from a name — a stand-in crest (MED-03). */
-export function Monogram({ name, size = 36 }: { name: string; size?: number }) {
+export function Monogram({
+  name,
+  size = 36,
+  shape = "circle",
+}: {
+  name: string;
+  size?: number;
+  shape?: "circle" | "rounded";
+}) {
   const initials = name
     .split(/\s+/)
     .slice(0, 2)
@@ -158,13 +200,14 @@ export function Monogram({ name, size = 36 }: { name: string; size?: number }) {
   const hue = [...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
   return (
     <span
-      className="grid shrink-0 place-items-center rounded-full font-semibold text-ink"
+      className="grid shrink-0 place-items-center font-semibold text-ink"
       style={{
         height: size,
         width: size,
         fontSize: size * 0.36,
         background: `hsl(${hue} 24% 22%)`,
         border: "1px solid var(--line-strong)",
+        borderRadius: shape === "circle" ? "9999px" : "var(--radius-md)",
       }}
     >
       {initials}

@@ -31,12 +31,16 @@ def run() -> None:
                 r = tm.loc[int(source_id)]
             except (KeyError, ValueError):
                 continue
+            img = r["image_url"] if pd.notna(r["image_url"]) else None
+            if img and "default" in img.lower():  # TM silhouette placeholder
+                img = None
             updates.append({
                 "id": player_id,
                 "international_caps": int(r["international_caps"]) if pd.notna(r["international_caps"]) else None,
                 "international_goals": int(r["international_goals"]) if pd.notna(r["international_goals"]) else None,
                 "contract_expiration": r["contract"] if pd.notna(r["contract"]) else None,
                 "highest_market_value_eur": int(r["highest_market_value_in_eur"]) if pd.notna(r["highest_market_value_in_eur"]) else None,
+                "image_url": img,
             })
             n += 1
         session.bulk_update_mappings(Player, updates)
@@ -44,6 +48,8 @@ def run() -> None:
         capped = sum(1 for u in updates if u["international_caps"] is not None)
         contracts = sum(1 for u in updates if u["contract_expiration"] is not None)
         hmv = sum(1 for u in updates if u["highest_market_value_eur"] is not None)
-        log.info("enriched %d players | intl_caps=%d, contract=%d, highest_mv=%d", n, capped, contracts, hmv)
+        imgs = sum(1 for u in updates if u["image_url"] is not None)
+        log.info("enriched %d players | intl_caps=%d, contract=%d, highest_mv=%d, image=%d",
+                 n, capped, contracts, hmv, imgs)
     finally:
         session.close()

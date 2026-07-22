@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 
 import { usePlayer } from "../api/hooks";
 import { ApiError } from "../api/client";
-import { Feet, Loading } from "../components/ui";
+import { Avatar, Feet, Loading } from "../components/ui";
 import { NotFound } from "./NotFound";
 import { money } from "../lib/format";
 
@@ -52,17 +52,20 @@ export function PlayerLayout() {
             {p.international_caps != null && <span>· {p.international_caps} caps</span>}
           </div>
         </div>
-        {/* the one hero number, explicitly sourced (CRIT-03) */}
-        <div className="text-right">
-          <div className="eyebrow mb-1.5">Transfermarkt value</div>
-          <div className="tnum text-display font-semibold text-accent">
-            {money(p.market_value_eur)}
-          </div>
-          {p.highest_market_value_eur != null && (
-            <div className="tnum mt-1 text-caption text-ink-3">
-              career peak {money(p.highest_market_value_eur)}
+        {/* the one hero number, explicitly sourced (CRIT-03), + player photo top-right */}
+        <div className="flex items-center gap-5">
+          <div className="text-right">
+            <div className="eyebrow mb-1.5">Transfermarkt value</div>
+            <div className="tnum text-display font-semibold text-accent">
+              {money(p.market_value_eur)}
             </div>
-          )}
+            {p.highest_market_value_eur != null && (
+              <div className="tnum mt-1 text-caption text-ink-3">
+                career peak {money(p.highest_market_value_eur)}
+              </div>
+            )}
+          </div>
+          <Avatar src={p.image_url} name={p.full_name} size={72} shape="rounded" />
         </div>
       </div>
 

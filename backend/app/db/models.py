@@ -131,6 +131,7 @@ class Player(Base, TimestampMixin):
     international_goals: Mapped[int | None] = mapped_column(Integer)
     contract_expiration: Mapped[date | None] = mapped_column(Date)
     highest_market_value_eur: Mapped[int | None] = mapped_column(Numeric(14, 0))
+    image_url: Mapped[str | None] = mapped_column(String(512))  # Transfermarkt portrait
 
     xrefs: Mapped[list[EntityXref]] = relationship(
         back_populates="player", cascade="all, delete-orphan"
