@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -150,12 +152,22 @@ def player_profile(player_id: int, db: Session = Depends(get_session)) -> Player
     cur = db.execute(_CURRENT_VALUE_SQL, {"pid": player_id}).scalar()
     seasons = db.execute(_SEASONS_SQL, {"pid": player_id}).mappings().all()
 
+    dob = bio["date_of_birth"]
+    age = None
+    if dob:
+        today = date.today()
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    # most recent season's club = current club (seasons are ordered newest-first)
+    current_club = seasons[0]["club"] if seasons else None
+
     return PlayerProfile(
         id=bio["id"],
         full_name=bio["full_name"],
         primary_position=bio["primary_position"],
         nationality=bio["nationality"],
         date_of_birth=str(bio["date_of_birth"]) if bio["date_of_birth"] else None,
+        age=age,
+        current_club=current_club,
         foot=bio["foot"],
         height_cm=bio["height_cm"],
         market_value_eur=float(cur) if cur is not None else None,

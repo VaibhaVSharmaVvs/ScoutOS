@@ -34,6 +34,8 @@ class PlayerProfile(BaseModel):
     primary_position: str | None = None
     nationality: str | None = None
     date_of_birth: str | None = None
+    age: int | None = None
+    current_club: str | None = None
     foot: str | None = None
     height_cm: int | None = None
     market_value_eur: float | None = None

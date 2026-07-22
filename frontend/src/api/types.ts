@@ -28,6 +28,8 @@ export interface PlayerProfile {
   primary_position: string | null;
   nationality: string | null;
   date_of_birth: string | null;
+  age: number | null;
+  current_club: string | null;
   foot: string | null;
   height_cm: number | null;
   market_value_eur: number | null;

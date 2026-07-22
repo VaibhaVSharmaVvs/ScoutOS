@@ -40,14 +40,15 @@ export function PlayerLayout() {
       <div className="flex flex-wrap items-end justify-between gap-6 pb-6">
         <div>
           <div className="eyebrow mb-2">
-            {p.primary_position ?? "Player"}
-            {p.nationality ? ` · ${p.nationality}` : ""}
+            {[p.primary_position ?? "Player", p.nationality, p.current_club]
+              .filter(Boolean)
+              .join(" · ")}
           </div>
           <h1 className="text-h1 font-semibold">{p.full_name}</h1>
           <div className="mt-2.5 flex flex-wrap items-center gap-2 text-sm text-ink-3">
             {p.foot && <Badge>{p.foot}-footed</Badge>}
-            {p.height_cm && <span>{p.height_cm} cm</span>}
-            {p.date_of_birth && <span>· b. {p.date_of_birth}</span>}
+            {p.age != null && <span>age {p.age}</span>}
+            {p.height_cm && <span>· {p.height_cm} cm</span>}
             {p.international_caps != null && <span>· {p.international_caps} caps</span>}
           </div>
         </div>
