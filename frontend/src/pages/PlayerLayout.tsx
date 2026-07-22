@@ -65,7 +65,7 @@ export function PlayerLayout() {
               </div>
             )}
           </div>
-          <Avatar src={p.image_url} name={p.full_name} size={72} shape="rounded" />
+          <Avatar src={p.image_url} name={p.full_name} h={104} />
         </div>
       </div>
 

@@ -148,39 +148,47 @@ function Foot({ fill, mirror = false }: { fill: string; mirror?: boolean }) {
   );
 }
 
-/** Player photo when we have one, else a monogram fallback (and on load error).
- *  `shape` circle for list icons, rounded for the larger profile portrait. */
-export function Avatar({
-  src,
-  name,
-  size = 36,
-  shape = "circle",
-}: {
-  src?: string | null;
-  name: string;
-  size?: number;
-  shape?: "circle" | "rounded";
-}) {
+// Transfermarkt portraits are ~3:4 (139x181). Frame avatars to that aspect and
+// use object-contain so the WHOLE photo shows — never cropped.
+const PORTRAIT_AR = 139 / 181;
+
+/** Player photo (full, uncropped) in a portrait frame; monogram fallback when
+ *  there's no photo or it fails to load. `h` is the frame height in px. */
+export function Avatar({ src, name, h = 40 }: { src?: string | null; name: string; h?: number }) {
   const [failed, setFailed] = useState(false);
-  const radius = shape === "circle" ? "9999px" : "var(--radius-md)";
-  if (!src || failed) return <Monogram name={name} size={size} shape={shape} />;
+  const w = Math.round(h * PORTRAIT_AR);
+  const frame = {
+    height: h,
+    width: w,
+    borderRadius: "var(--radius-md)",
+    border: "1px solid var(--line-strong)",
+    background: "var(--surface-2)",
+  } as const;
+
+  if (!src || failed) {
+    const initials = name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((x) => x[0]?.toUpperCase() ?? "")
+      .join("");
+    const hue = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7);
+    return (
+      <span
+        className="grid shrink-0 place-items-center font-semibold text-ink"
+        style={{ ...frame, background: `hsl(${hue} 24% 22%)`, fontSize: h * 0.32 }}
+      >
+        {initials}
+      </span>
+    );
+  }
   return (
     <img
       src={src}
       alt={name}
       loading="lazy"
       onError={() => setFailed(true)}
-      className="shrink-0 object-cover"
-      style={{
-        height: size,
-        width: size,
-        borderRadius: radius,
-        border: "1px solid var(--line-strong)",
-        background: "var(--surface-2)",
-        // TM portraits are head-and-shoulders; top-align frames the full head
-        // centred. Inline (not a Tailwind class) so it can't be purged/overridden.
-        objectPosition: "center top",
-      }}
+      className="shrink-0 object-contain"
+      style={frame}
     />
   );
 }
