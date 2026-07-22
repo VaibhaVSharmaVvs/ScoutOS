@@ -14,6 +14,7 @@ class PlayerHit(BaseModel):
     birth_year: int | None = None
     foot: str | None = None
     market_value_eur: float | None = None
+    image_url: str | None = None
 
 
 class SeasonStat(BaseModel):
@@ -36,6 +37,7 @@ class PlayerProfile(BaseModel):
     date_of_birth: str | None = None
     age: int | None = None
     current_club: str | None = None
+    image_url: str | None = None
     foot: str | None = None
     height_cm: int | None = None
     market_value_eur: float | None = None
@@ -89,6 +91,7 @@ class SimilarPlayer(BaseModel):
     shared_traits: list[dict] | None = None
     market_value_eur: float | None = None
     birth_year: int | None = None
+    image_url: str | None = None
 
 
 class SimilarResponse(BaseModel):

@@ -54,6 +54,7 @@ GK_NOTE = ("Shot-stopping data (saves, PSxG, clean sheets) isn't in our dataset 
 
 _SEARCH_SQL = text(
     "select p.id, p.full_name, p.primary_position, p.nationality, p.birth_year, p.foot, "
+    "p.image_url, "
     "(select mv.value_eur from market_values mv where mv.player_id = p.id "
     " order by mv.as_of desc limit 1) as market_value_eur "
     "from players p "
@@ -64,7 +65,7 @@ _SEARCH_SQL = text(
 
 _BIO_SQL = text(
     "select id, full_name, primary_position, nationality, date_of_birth, foot, "
-    "height_cm, highest_market_value_eur, contract_expiration, international_caps "
+    "height_cm, highest_market_value_eur, contract_expiration, international_caps, image_url "
     "from players where id = :pid"
 )
 
@@ -168,6 +169,7 @@ def player_profile(player_id: int, db: Session = Depends(get_session)) -> Player
         date_of_birth=str(bio["date_of_birth"]) if bio["date_of_birth"] else None,
         age=age,
         current_club=current_club,
+        image_url=bio["image_url"],
         foot=bio["foot"],
         height_cm=bio["height_cm"],
         market_value_eur=float(cur) if cur is not None else None,

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 import { usePlayerSearch } from "../api/hooks";
 import { SearchBar } from "../components/SearchBar";
-import { Card, Monogram } from "../components/ui";
+import { Avatar, Card } from "../components/ui";
 import { age, money } from "../lib/format";
 
 const FEATURED = [
@@ -66,7 +66,7 @@ function FeaturedCard({ name, index }: { name: string; index: number }) {
   const a = age(hit?.birth_year);
   const inner = (
     <Card className="card-hover group flex h-full items-center gap-3">
-      <Monogram name={name} />
+      <Avatar src={hit?.image_url} name={name} />
       <div className="min-w-0 flex-1">
         <div className="truncate font-medium">{name}</div>
         <div className="mt-0.5 truncate text-caption text-ink-3">

@@ -8,6 +8,7 @@ export interface PlayerHit {
   birth_year: number | null;
   foot: string | null;
   market_value_eur: number | null;
+  image_url: string | null;
 }
 
 export interface SeasonStat {
@@ -30,6 +31,7 @@ export interface PlayerProfile {
   date_of_birth: string | null;
   age: number | null;
   current_club: string | null;
+  image_url: string | null;
   foot: string | null;
   height_cm: number | null;
   market_value_eur: number | null;
@@ -83,6 +85,7 @@ export interface SimilarPlayer {
   shared_traits: { feature: string; label: string }[] | null;
   market_value_eur: number | null;
   birth_year: number | null;
+  image_url: string | null;
 }
 
 export interface SimilarResponse {

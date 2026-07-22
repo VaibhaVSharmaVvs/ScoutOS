@@ -50,7 +50,7 @@ def similar_players(
     meta = {
         r["id"]: r
         for r in db.execute(text(
-            "select p.id, p.birth_year, "
+            "select p.id, p.birth_year, p.image_url, "
             "(select mv.value_eur from market_values mv where mv.player_id = p.id "
             " order by mv.as_of desc limit 1) as market_value_eur "
             "from players p where p.id = any(:ids)"), {"ids": ids}).mappings()
@@ -63,6 +63,7 @@ def similar_players(
             season=h.get("season"), shared_traits=traits_by_pid.get(h["player_id"]),
             market_value_eur=(m := meta.get(h["player_id"], {})).get("market_value_eur"),
             birth_year=m.get("birth_year"),
+            image_url=m.get("image_url"),
         )
         for h in hits
     ]
