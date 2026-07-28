@@ -1,0 +1,59 @@
+# Render Blueprint (infrastructure-as-code). Apply from the Render dashboard:
+# New > Blueprint > point at this repo. Validate against Render's current schema
+# — plans/regions and a couple of field names may need adjusting for your account.
+# This provisions nothing until you apply it; it's a recommendation, not a commitment.
+
+databases:
+  - name: scoutos-db
+    plan: starter # free tier is time-limited; starter for persistence
+    postgresMajorVersion: "16"
+
+services:
+  - type: redis
+    name: scoutos-redis
+    plan: starter
+    ipAllowList: [] # only internal services connect
+
+  - type: web
+    name: scoutos-backend
+    runtime: docker
+    dockerfilePath: ./deploy/Dockerfile.backend
+    dockerContext: .
+    healthCheckPath: /health
+    # model artifacts live on a persistent disk, written by the ETL+train job
+    disk:
+      name: model-artifacts
+      mountPath: /app/ml/artifacts
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scoutos-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: scoutos-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ANTHROPIC_API_KEY # set in the dashboard to enable real LLM narratives
+        sync: false
+      - key: WEBAUTHN_RP_ID # e.g. scoutos.yourdomain.com
+        sync: false
+      - key: WEBAUTHN_ORIGIN # e.g. https://scoutos.yourdomain.com
+        sync: false
+
+  - type: web
+    name: scoutos-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL # the backend service's public URL
+        sync: false
+    routes:
+      - type: rewrite # SPA: serve index.html for client-side routes
+        source: /*
+        destination: /index.html

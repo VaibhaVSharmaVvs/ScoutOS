@@ -1,0 +1,38 @@
+# Backend serving image. Build context = REPO ROOT (not backend/) because the
+# serving layer imports the repo-root packages `ml` and `etl`.
+#
+# Editable installs are deliberate: the app anchors artifact/config/.env paths to
+# the repo root via __file__ (app/__init__.py, ml/_paths.py). A non-editable
+# install would move the code into site-packages and break that anchoring, so we
+# keep the source tree at /app and install it in place.
+#
+# Model artifacts (ml/artifacts, gitignored) are NOT baked in — they're provided
+# at runtime via a mounted volume/disk populated by the ETL+train job. warmup()
+# degrades gracefully until they're present.
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/app
+
+WORKDIR /app
+
+# source first (editable installs need the package trees present)
+COPY backend/ backend/
+COPY ml/ ml/
+COPY etl/ etl/
+COPY config/ config/
+
+# backend deps + the ml [models] extra (lightgbm/catboost/torch/faiss/shap).
+# etl is imported by path (PYTHONPATH=/app); only etl.load.db is used and it's
+# light, so its scraping deps aren't installed here.
+RUN pip install --upgrade pip \
+ && pip install -e ./backend -e "./ml[models]"
+
+# non-root
+RUN useradd -m app && chown -R app:app /app
+USER app
+
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--app-dir", "backend", "--host", "0.0.0.0", "--port", "8000"]

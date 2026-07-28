@@ -31,7 +31,8 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: deploy/Dockerfile.backend
     container_name: scoutos-backend
     env_file: .env
     environment:
@@ -44,9 +45,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    # mount the source (live reload) + local model artifacts so the container serves
     volumes:
-      - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      - ./backend:/app/backend
+      - ./ml:/app/ml
+      - ./etl:/app/etl
+      - ./config:/app/config
+    command: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     build:

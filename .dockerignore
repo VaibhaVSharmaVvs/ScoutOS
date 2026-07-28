@@ -1,0 +1,14 @@
+# keep the build context small — the backend image builds from the repo root
+.git
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+data/raw
+ml/artifacts
+frontend/node_modules
+frontend/dist
+**/*.tsbuildinfo
+catboost_info
+*.md
+design-review*.html
