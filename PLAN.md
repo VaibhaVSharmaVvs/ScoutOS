@@ -189,6 +189,20 @@ Scope notes: **heatmap deferred** (no event-level data — dropped in Phase 1 da
 - [ ] Cloudflare in front (DNS, caching, TLS)
 - [ ] **Weekly ETL cron** (GitHub Actions scheduled workflow): download latest data → update Postgres → optional model retrain → redeploy
 - [ ] Alerting on ETL failure (Action failure notification)
+- [ ] **Roll dataset forward to 2025-26** — first real exercise of the refresh
+      pipeline (the data is currently a static snapshot topping out at 2024-25):
+  - [ ] Re-ingest each source for the new season — FBref-Kaggle detailed stats,
+        Understat, Transfermarkt values, ClubElo — *contingent on the upstream
+        dumps having published 2025-26*; add `2526` to `DEFAULT_SEASONS`
+  - [ ] Rebuild down the chain: `etl.load --step all` → `ml.features.build` →
+        `ml.features.scaler`, then **retrain all models** (value/potential
+        especially — their time-split assumes the latest season is the test set)
+  - [ ] Bump the two hard-coded references: `CURRENT_SEASON` (analytics.py) and
+        the `age()` reference year (frontend `format.ts` / backend age calc)
+  - [ ] Validate with `etl.load --step checks` + spot-check a few players; use
+        this as the acceptance test that the weekly cron produces a correct DB
+  - [ ] If a source hasn't published 2025-26 yet, document the gap and fall back
+        to 2024-25 as current until it lands
 
 ---
 
