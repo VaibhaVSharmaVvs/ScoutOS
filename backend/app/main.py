@@ -40,11 +40,17 @@ app = FastAPI(
 # Middleware runs outermost-first in reverse registration order: rate-limit
 # guards first, then the response cache, then CORS.
 app.add_middleware(ResponseCacheMiddleware)
-app.add_middleware(RateLimitMiddleware)
+app.add_middleware(
+    RateLimitMiddleware,
+    limit=settings.rate_limit_requests,
+    window=settings.rate_limit_window_seconds,
+)
+_cors = settings.cors_origin_list
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Phase 0: open. Tighten before deploy (Phase 8).
-    allow_credentials=True,
+    allow_origins=_cors,
+    # credentials can't be combined with a wildcard origin per the CORS spec
+    allow_credentials="*" not in _cors,
     allow_methods=["*"],
     allow_headers=["*"],
 )

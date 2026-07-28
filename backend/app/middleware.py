@@ -16,7 +16,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from app.cache import get_bytes, set_bytes
+from app.cache import get_bytes, incr, set_bytes
 
 # path prefixes worth caching, with TTL seconds
 CACHE_TTL = 300
@@ -48,7 +48,9 @@ class ResponseCacheMiddleware(BaseHTTPMiddleware):
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Fixed-window: `limit` requests per `window` seconds per client IP."""
+    """Fixed-window rate limit: `limit` requests per `window` seconds per client
+    IP. Backed by Redis (shared across workers) with an in-memory fallback when
+    Redis is unavailable."""
 
     def __init__(self, app, limit: int = 120, window: int = 60):
         super().__init__(app)
@@ -60,13 +62,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if request.url.path.startswith("/health"):
             return await call_next(request)
         client = request.client.host if request.client else "unknown"
-        now = time.monotonic()
-        window_start = now - self.window
-        hits = [t for t in self._hits[client] if t > window_start]
-        if len(hits) >= self.limit:
+        if self._over_limit(client):
             return Response(content='{"detail":"rate limit exceeded"}', status_code=429,
                             media_type="application/json",
                             headers={"Retry-After": str(self.window)})
+        return await call_next(request)
+
+    def _over_limit(self, client: str) -> bool:
+        bucket = int(time.time() // self.window)
+        count = incr(f"rl:{client}:{bucket}", self.window)  # shared, atomic
+        if count is not None:
+            return count > self.limit
+        # Redis down -> per-process sliding window
+        now = time.monotonic()
+        hits = [t for t in self._hits[client] if t > now - self.window]
         hits.append(now)
         self._hits[client] = hits
-        return await call_next(request)
+        return len(hits) > self.limit

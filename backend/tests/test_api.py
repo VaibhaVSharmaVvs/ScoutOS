@@ -136,10 +136,14 @@ def test_auth_flow():
     ).status_code == 401
 
 
-def test_rate_limit():
+def test_rate_limit(monkeypatch):
     from fastapi import FastAPI
 
     from app.middleware import RateLimitMiddleware
+
+    # force the in-memory fallback so the test is deterministic and independent of
+    # whether Redis is running (Redis state would otherwise bleed across requests).
+    monkeypatch.setattr("app.middleware.incr", lambda *a, **k: None)
 
     app2 = FastAPI()
     app2.add_middleware(RateLimitMiddleware, limit=3, window=60)

@@ -17,6 +17,19 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://scout:scout@localhost:5432/scoutos"
     redis_url: str = "redis://localhost:6379/0"
 
+    # comma-separated allowed browser origins. Dev defaults; set CORS_ORIGINS in
+    # prod to the frontend URL(s). "*" allows any (dev only).
+    cors_origins: str = "http://localhost:5173,http://localhost:4173"
+
+    # fixed-window rate limit (per client IP). Redis-backed so it holds across
+    # workers; falls back to in-memory when Redis is down.
+    rate_limit_requests: int = 120
+    rate_limit_window_seconds: int = 60
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
     jwt_secret: str = "change_me"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440

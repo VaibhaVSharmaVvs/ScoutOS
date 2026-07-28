@@ -53,3 +53,18 @@ def set_bytes(key: str, value: bytes, ttl: int) -> None:
         client.set(key, value, ex=ttl)
     except Exception:  # noqa: BLE001
         pass
+
+
+def incr(key: str, ttl: int) -> int | None:
+    """Atomically increment `key` (setting its TTL) and return the new count, or
+    None if Redis is unavailable. Used for a shared, cross-worker rate limiter."""
+    client = _redis()
+    if client is None:
+        return None
+    try:
+        pipe = client.pipeline()
+        pipe.incr(key)
+        pipe.expire(key, ttl)
+        return int(pipe.execute()[0])
+    except Exception:  # noqa: BLE001
+        return None

@@ -27,11 +27,12 @@ The image does **not** bake in `ml/artifacts` (gitignored, and they change on re
 
 The `etl-refresh.yml` has a `TODO(deploy)` where this hook goes.
 
-## Prod hardening carried here (Phase 8/9)
-- Tighten CORS/auth (currently open for dev).
-- Redis-backed rate limiting (in-memory now → per-worker only).
-- Self-host the Geist font (currently Google Fonts) for offline/CSP.
-- Failure alerting on the refresh workflow (stub job present → wire to Slack/email).
+## Prod hardening
+- ✅ **CORS** configurable via `CORS_ORIGINS` (comma-separated); no longer `*`. Set it to the frontend URL in prod.
+- ✅ **Rate limiting** Redis-backed (shared across workers) via `RATE_LIMIT_REQUESTS`/`RATE_LIMIT_WINDOW_SECONDS`, in-memory fallback when Redis is down.
+- ✅ **Geist font self-hosted** (`frontend/public/fonts/*.woff2` + `@font-face`) — no external font fetch, CSP/offline-safe.
+- ⏳ Passkey **ceremony store** still in-memory → move to Redis for multi-worker (single-worker/dev is fine).
+- ⏳ Failure alerting on the refresh workflow (stub job present → wire to Slack/email).
 
 ## Verification status
 - ✅ CI commands verified locally (scoped lint clean, tests pass/skip, `npm run build` clean).
