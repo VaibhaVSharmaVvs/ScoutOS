@@ -13,7 +13,6 @@ FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
     PYTHONPATH=/app
 
 WORKDIR /app
@@ -27,8 +26,11 @@ COPY config/ config/
 # backend deps + the ml [models] extra (lightgbm/catboost/torch/faiss/shap).
 # etl is imported by path (PYTHONPATH=/app); only etl.load.db is used and it's
 # light, so its scraping deps aren't installed here.
-RUN pip install --upgrade pip \
- && pip install -e ./backend -e "./ml[models]"
+# backend editable (provides `app` + keeps the repo-root path anchoring); ml
+# non-editable = its deps only (modules import via PYTHONPATH=/app). Cache mount
+# keeps torch/faiss wheels between builds so rebuilds are fast.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && pip install -e ./backend "./ml[models]"
 
 # non-root
 RUN useradd -m app && chown -R app:app /app

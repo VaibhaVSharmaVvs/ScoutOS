@@ -34,7 +34,7 @@ jobs:
           cache: pip
       - run: |
           python -m pip install --upgrade pip
-          pip install -e "./backend[dev]" -e "./ml[models]"
+          pip install -e "./backend[dev]" "./ml[models]"
       # DB- and artifact-dependent tests skip cleanly in CI; logic/API/passkey
       # tests run. Full integration is exercised against staging (Phase 9).
       - run: pytest backend/tests ml/tests -q
