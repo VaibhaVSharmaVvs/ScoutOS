@@ -1,0 +1,63 @@
+name: Weekly data refresh
+
+# Rebuilds the DB + models from the latest source data on a schedule. This is
+# also the acceptance test for rolling the dataset forward (e.g. to 2025-26).
+on:
+  schedule:
+    - cron: "0 4 * * 1" # Mondays 04:00 UTC
+  workflow_dispatch: # manual trigger from the Actions tab
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PYTHONPATH: .
+      DATABASE_URL: ${{ secrets.DATABASE_URL }} # the managed Render Postgres
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./backend[dev]" -e "./ml[models]" -e ./etl
+
+      - name: Ingest latest data
+        # FBref detailed stats come from Kaggle re-publishers that can lag; if a
+        # season isn't out yet the load stays on the previous one (documented gap).
+        run: python -m etl.ingest --source all
+
+      - name: Load → features → scaler
+        run: |
+          python -m etl.load --step all
+          python -m ml.features.build
+          python -m ml.features.scaler
+
+      - name: Retrain models
+        run: |
+          python -m ml.models.value
+          python -m ml.models.position
+          python -m ml.models.potential
+          python -m ml.models.similarity
+          # club_fit is config-driven (no training)
+
+      - name: Data-quality checks (acceptance gate)
+        run: python -m etl.load --step checks
+
+      # TODO(deploy): deliver the freshly trained ml/artifacts/ to the backend's
+      # persistent disk. Options: (a) upload to object storage + backend pulls on
+      # start, (b) rsync to the Render disk, (c) rebuild+redeploy the image with
+      # artifacts baked in. Then trigger a redeploy (Render deploy hook).
+      # See DEPLOY.md § "Model artifacts in production".
+
+  notify-on-failure:
+    needs: refresh
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Weekly refresh failed — wire this to Slack/email (DEPLOY.md § Alerting)."

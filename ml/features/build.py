@@ -18,13 +18,8 @@ import pandas as pd
 from sqlalchemy import delete, select
 
 from app.db.models import (
-    Club,
-    ClubStrength,
-    League,
-    MarketValue,
     Player,
     PlayerFeatures,
-    PlayerSeasonStats,
     Season,
 )
 from app.db.session import SessionLocal, get_engine
