@@ -43,9 +43,16 @@ TM_TRANSFERS = "data/raw/transfermarkt/transfers.csv"
 
 def _dedup_pss(rows: list[dict]) -> list[dict]:
     """Collapse rows colliding on (player_id, season_id, club_id, source),
-    keeping the one with the most minutes (matches the unique constraint)."""
+    keeping the one with the most minutes (matches the unique constraint).
+
+    Rows whose season is not in the active-season allow-list (dimensions.SEASONS)
+    resolve to season_id=None and are DROPPED here — this is how an inactive
+    season (e.g. 2025-26 while its detailed stats are unpublished) is excluded
+    from the DB without deleting the raw parquet."""
     best: dict[tuple, dict] = {}
     for r in rows:
+        if r["season_id"] is None:
+            continue
         k = (r["player_id"], r["season_id"], r["club_id"], r["source"])
         cur = best.get(k)
         if cur is None or (r["minutes"] or -1) > (cur["minutes"] or -1):
