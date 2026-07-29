@@ -40,10 +40,10 @@ class TestTrainedValueModel:
     def test_beats_baseline_and_reasonable_r2(self):
         m = json.loads((ART / "metrics.json").read_text())
         assert m["mae_eur"] < m["baseline_mae_eur"]      # beats predict-the-median
-        # newest-season hold-out is a harder test (values still settling); the firm
-        # guarantee is beating the baseline, with a sanity floor on explained variance
-        assert m["r2_eur"] > 0.3
-        assert m["test_season"] == 2025                    # evaluated on 2025-26
+        # 2024-25 hold-out (latest complete season): a real generalization test,
+        # with a sanity floor on explained variance
+        assert m["r2_eur"] > 0.5
+        assert m["test_season"] == 2024                    # evaluated on 2024-25
 
     def test_model_loads_and_predicts(self):
         import lightgbm as lgb

@@ -19,7 +19,10 @@ from app.schemas import (
 
 router = APIRouter(tags=["analytics"])
 
-CURRENT_SEASON = "2025-26"
+# Latest season with COMPLETE data (incl. detailed FBref stats). 2025-26 is
+# excluded from the pipeline until its detailed stats publish — see
+# etl.load.dimensions.SEASONS. Bump this to "2025-26" when that season is added.
+CURRENT_SEASON = "2024-25"
 REGULAR_MINUTES = 900
 CAREER_HORIZONS = (1, 3)  # +5yr not trained (too few valuation pairs)
 POSITION_GROUPS = ("GK", "DEF", "MID", "FWD")

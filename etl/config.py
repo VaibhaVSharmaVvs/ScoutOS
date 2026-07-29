@@ -41,7 +41,14 @@ BIG5_LEAGUES = [
 
 # --- Seasons ------------------------------------------------------------------
 # soccerdata 4-digit codes: "2425" == 2024-25. Most recent completed seasons.
-DEFAULT_SEASONS = ["2021", "2122", "2223", "2324", "2425", "2526"]
+# NOTE: "2526" (2025-26) is intentionally EXCLUDED for now. Understat/ClubElo/
+# Transfermarkt have complete 2025-26 data, but the detailed FBref stats
+# (passing/defense/possession) are not yet published for 2025-26, so loading it
+# yielded hollow feature vectors and broken radars. Add "2526" back here (and to
+# etl.load.dimensions.SEASONS) once a complete detailed 2025-26 source lands —
+# the ingest wiring (fbref_kaggle.DATASETS["2526"], CLUBELO_SNAPSHOT 2026-06-01)
+# is already in place and dormant.
+DEFAULT_SEASONS = ["2021", "2122", "2223", "2324", "2425"]
 
 # --- FBref -------------------------------------------------------------------
 # soccerdata 1.9.0 ships a working (Cloudflare-bypassing) parser but restricts
