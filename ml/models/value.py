@@ -26,7 +26,7 @@ from ml.models.dataset import feature_columns, load_features, time_split
 MODEL_VERSION = "value_v1"
 FEATURE_SET_VERSION = "v1"
 MIN_MINUTES = 300          # drop tiny samples (noisy per-90) from training
-TEST_YEAR, VAL_YEAR = 2024, 2023  # 2024-25 test, 2023-24 val
+TEST_YEAR, VAL_YEAR = 2025, 2024  # 2025-26 test, 2024-25 val
 # NOTE: youth-snapshot signals (highest_market_value/caps/contract) were tested
 # and REJECTED: highest_market_value is temporally leaky (all-time peak leaks
 # future value in a time-split), and caps/contract barely move U21 fit while

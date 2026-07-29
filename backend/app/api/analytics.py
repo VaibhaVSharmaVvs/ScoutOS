@@ -19,7 +19,7 @@ from app.schemas import (
 
 router = APIRouter(tags=["analytics"])
 
-CURRENT_SEASON = "2024-25"
+CURRENT_SEASON = "2025-26"
 REGULAR_MINUTES = 900
 CAREER_HORIZONS = (1, 3)  # +5yr not trained (too few valuation pairs)
 POSITION_GROUPS = ("GK", "DEF", "MID", "FWD")
