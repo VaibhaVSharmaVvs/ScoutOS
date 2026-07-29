@@ -82,6 +82,8 @@ DATASETS = {
              "cleaned_2023-24.csv", {}, AKSHAN_MAP, {"sca", "gca"}),
     "2425": ("hubertsidorowicz/football-players-stats-2024-2025",
              "players_data-2024_2025.csv", {}, HUBERT_MAP, set()),
+    "2526": ("hubertsidorowicz/football-players-stats-2025-2026",
+             "players_data-2025_2026.csv", {}, HUBERT_MAP, set()),
 }
 
 

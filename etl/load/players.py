@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pandas as pd
 from rapidfuzz import fuzz, process
-from sqlalchemy import delete
+from sqlalchemy import text
 
 from app.db.models import EntityXref, Player
 from etl.load.db import SessionLocal, log
@@ -117,9 +117,12 @@ def run() -> None:
     canon: list[dict] = []  # {norm, birth_year, teams, player}
     s = {"tm_exact": 0, "tm_fuzzy": 0, "tm_override": 0, "tm_none": 0, "tm_ambiguous": 0}
     try:
-        # Idempotent full rebuild of the canonical layer (players -> xref cascade).
-        session.execute(delete(EntityXref))
-        session.execute(delete(Player))
+        # Idempotent full rebuild of the canonical layer. TRUNCATE ... CASCADE so
+        # a re-run on a populated DB clears the FK-dependent facts (market_values,
+        # transfers, player_season_stats, player_features, entity_xref) too — the
+        # facts/features steps reload them. A plain DELETE FROM players hits an FK
+        # violation from those child rows on a second run.
+        session.execute(text("TRUNCATE players CASCADE"))
         session.commit()
         for row in fb.itertuples(index=False):
             key = f"{row.norm}|{row.birth_year}"

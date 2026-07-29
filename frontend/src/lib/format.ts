@@ -24,7 +24,7 @@ export function num(v: number | null | undefined, digits = 1): string {
 
 export function age(birthYear: number | null | undefined): number | null {
   if (!birthYear) return null;
-  return 2025 - birthYear; // dataset season is 2024-25
+  return 2026 - birthYear; // dataset season is 2025-26
 }
 
 /** A driver's magnitude in scout words, from its |weight| (MED-02). */

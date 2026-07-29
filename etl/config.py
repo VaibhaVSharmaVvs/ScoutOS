@@ -41,7 +41,7 @@ BIG5_LEAGUES = [
 
 # --- Seasons ------------------------------------------------------------------
 # soccerdata 4-digit codes: "2425" == 2024-25. Most recent completed seasons.
-DEFAULT_SEASONS = ["2021", "2122", "2223", "2324", "2425"]
+DEFAULT_SEASONS = ["2021", "2122", "2223", "2324", "2425", "2526"]
 
 # --- FBref -------------------------------------------------------------------
 # soccerdata 1.9.0 ships a working (Cloudflare-bypassing) parser but restricts
@@ -97,4 +97,5 @@ CLUBELO_SNAPSHOT_DATES = [
     "2023-06-01",
     "2024-06-01",
     "2025-06-01",
+    "2026-06-01",  # end of 2025-26
 ]
