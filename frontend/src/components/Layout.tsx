@@ -1,12 +1,19 @@
+import { motion } from "motion/react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../api/auth";
+import { useReducedMotion } from "../lib/useReducedMotion";
 import { SearchBar } from "./SearchBar";
 
 export function Layout() {
   const { isAuthenticated, logout } = useAuth();
   const { pathname } = useLocation();
+  const reduced = useReducedMotion();
   const isHome = pathname === "/";
+  // top-level route key: switching sections (Home / Player / Squad) replays the
+  // transition; navigating between a player's own tabs stays within PlayerLayout
+  // (its own Motion), so key on the section root, not the full path.
+  const routeKey = pathname.split("/").slice(0, 3).join("/");
 
   return (
     <div className="min-h-screen bg-canvas text-ink">
@@ -38,9 +45,16 @@ export function Layout() {
           )}
         </div>
       </header>
-      <main id="content" key={pathname} className="fade-in mx-auto max-w-6xl px-5 py-7">
+      <motion.main
+        id="content"
+        key={routeKey}
+        className="mx-auto max-w-6xl px-5 py-7"
+        initial={reduced ? false : { opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.26, ease: [0.23, 1, 0.32, 1] }}
+      >
         <Outlet />
-      </main>
+      </motion.main>
     </div>
   );
 }

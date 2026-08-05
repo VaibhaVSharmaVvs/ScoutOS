@@ -62,16 +62,18 @@
   --radius-lg: 16px;
 
   /* bklit chart tokens — mapped onto the floodlit palette so bklit's @visx/Motion
-     charts read as part of this app, not a bolted-on library. bklit reads these
-     var names directly as SVG stroke/fill colors. */
+     radar reads as part of this app, not a bolted-on library. bklit reads these
+     var names directly as SVG stroke/fill colours. Kept in this unlayered :root
+     so they override any @layer base defaults — the app is always the dark
+     floodlit canvas, so there's no separate .dark variant. */
   --border: var(--line-strong); /* grid rings + axis spokes (drawn at 0.6 opacity) */
   --chart-grid: var(--line);
   --chart-label: var(--ink-3); /* axis captions */
   --chart-foreground: var(--ink);
   --chart-foreground-muted: var(--ink-3);
   --chart-background: var(--surface-1);
-  /* series palette — accent-led green family (single-series charts pass an
-     explicit accent colour; these are the fallbacks for multi-series charts) */
+  /* series palette — accent-led green family (the radar passes an explicit
+     accent colour; these are the fallbacks for any multi-series chart) */
   --chart-1: #34d399;
   --chart-2: #5eead4;
   --chart-3: #f5b544;
