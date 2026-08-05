@@ -1,15 +1,19 @@
-import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
+import { motion } from "motion/react";
+import { NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { usePlayer } from "../api/hooks";
 import { ApiError } from "../api/client";
 import { Avatar, Feet, Loading } from "../components/ui";
 import { NotFound } from "./NotFound";
 import { money } from "../lib/format";
+import { useReducedMotion } from "../lib/useReducedMotion";
 
 export function PlayerLayout() {
   const { id } = useParams();
   const playerId = Number(id);
   const navigate = useNavigate();
+  const location = useLocation();
+  const reduced = useReducedMotion();
   const { data: p, isLoading, error } = usePlayer(playerId);
 
   if (isLoading) return <Loading label="Loading player" />;
@@ -88,9 +92,17 @@ export function PlayerLayout() {
         ))}
       </div>
 
-      <div className="pt-6">
+      {/* Motion: each tab switch replays a short rise-in (keyed by route).
+          Enter-only so there's no exit-copy flash; reduced-motion → no transform. */}
+      <motion.div
+        key={location.pathname}
+        className="pt-6"
+        initial={reduced ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+      >
         <Outlet context={{ player: p }} />
-      </div>
+      </motion.div>
     </div>
   );
 }
