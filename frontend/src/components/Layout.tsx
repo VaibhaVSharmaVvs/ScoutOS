@@ -16,11 +16,13 @@ export function Layout() {
   const routeKey = pathname.split("/").slice(0, 3).join("/");
 
   return (
-    <div className="min-h-screen bg-canvas text-ink">
+    // Full-height app shell: fixed header, the rest is one scroll region — so Home
+    // can pin to exactly one screen (overflow-hidden) while other routes scroll.
+    <div className="flex h-dvh flex-col bg-canvas text-ink">
       <a href="#content" className="skip-link">
         Skip to content
       </a>
-      <header className="sticky top-0 z-30 border-b border-line bg-[rgb(11_15_16/0.85)] backdrop-blur">
+      <header className="z-30 shrink-0 border-b border-line bg-[rgb(11_15_16/0.85)] backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-5 px-5 py-3">
           <Wordmark />
           <nav className="hidden gap-0.5 text-sm md:flex">
@@ -48,14 +50,20 @@ export function Layout() {
       <motion.main
         id="content"
         key={routeKey}
-        // Home owns its full-bleed hero, so it renders edge-to-edge; every other
-        // route sits in the standard centred content column.
-        className={isHome ? "" : "mx-auto max-w-6xl px-5 py-7"}
+        // Home fills the region exactly and never scrolls; every other route is a
+        // centred column that scrolls within this region.
+        className={isHome ? "min-h-0 flex-1 overflow-hidden" : "min-h-0 flex-1 overflow-y-auto"}
         initial={reduced ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.26, ease: [0.23, 1, 0.32, 1] }}
       >
-        <Outlet />
+        {isHome ? (
+          <Outlet />
+        ) : (
+          <div className="mx-auto max-w-6xl px-5 py-7">
+            <Outlet />
+          </div>
+        )}
       </motion.main>
     </div>
   );

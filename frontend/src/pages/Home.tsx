@@ -27,13 +27,15 @@ export function Home() {
     : { initial: "hidden" as const, animate: "show" as const, variants: container };
 
   return (
-    <div>
+    // One screen, no page scroll: hero flexes to fill, the two rails sit compact
+    // at the bottom. Anything that can't fit on a very short viewport is clipped.
+    <div className="flex h-full flex-col overflow-hidden">
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="relative isolate overflow-hidden border-b border-line">
+      <section className="relative isolate flex min-h-0 flex-1 items-center justify-center overflow-hidden border-b border-line">
         <HeroBackdrop />
         <motion.div
           {...stagger}
-          className="relative mx-auto flex max-w-3xl flex-col items-center px-5 pb-16 pt-20 text-center md:pb-24 md:pt-28"
+          className="relative flex max-w-3xl flex-col items-center px-5 py-6 text-center"
         >
           <Rise reduced={reduced}>
             <span className="eyebrow inline-flex items-center gap-2 text-accent">
@@ -43,8 +45,8 @@ export function Home() {
           </Rise>
           <Rise reduced={reduced}>
             <h1
-              className="mt-5 font-semibold"
-              style={{ fontSize: "clamp(40px, 7vw, 66px)", lineHeight: 1.02, letterSpacing: "-0.035em" }}
+              className="mt-4 font-semibold"
+              style={{ fontSize: "clamp(32px, 5.5vw, 60px)", lineHeight: 1.03, letterSpacing: "-0.035em" }}
             >
               Scout <span className="text-accent">smarter.</span>
               <br />
@@ -52,32 +54,36 @@ export function Home() {
             </h1>
           </Rise>
           <Rise reduced={reduced}>
-            <p className="mx-auto mt-5 max-w-xl text-ink-2">
+            <p className="mx-auto mt-4 max-w-xl text-sm text-ink-2 sm:text-base">
               AI-powered scouting across Europe’s top five leagues — market value, potential, playing
               style, position, and club fit, each explained by the model’s own drivers.
             </p>
           </Rise>
-          <Rise reduced={reduced} className="mt-8 flex w-full justify-center">
+          <Rise reduced={reduced} className="mt-6 flex w-full justify-center">
             <SearchBar variant="hero" id={HERO_SEARCH_ID} />
           </Rise>
         </motion.div>
       </section>
 
       {/* ── FEATURED ─────────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-5 py-12">
-        <FeaturedRail reduced={reduced} />
+      <section className="w-full shrink-0">
+        <div className="mx-auto max-w-6xl px-5 pt-5">
+          <FeaturedRail reduced={reduced} />
+        </div>
       </section>
 
       {/* ── WHAT YOU GET ─────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-5 pb-20">
-        <h2 className="eyebrow mb-4 flex items-center gap-2">
-          <span className="h-px w-6 bg-[var(--line-strong)]" />
-          What you get on every player
-        </h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {CAPABILITIES.map((c, i) => (
-            <FeatureCard key={c.title} {...c} reduced={reduced} index={i} />
-          ))}
+      <section className="w-full shrink-0">
+        <div className="mx-auto max-w-6xl px-5 py-5">
+          <h2 className="eyebrow mb-3 flex items-center gap-2">
+            <span className="h-px w-6 bg-[var(--line-strong)]" />
+            What you get on every player
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {CAPABILITIES.map((c, i) => (
+              <FeatureCard key={c.title} {...c} reduced={reduced} index={i} />
+            ))}
+          </div>
         </div>
       </section>
     </div>
@@ -211,11 +217,11 @@ function FeaturedCard({ name, index, reduced }: { name: string; index: number; r
   const a = age(hit?.birth_year);
 
   const body = (
-    <div className="group flex h-[128px] w-[248px] shrink-0 gap-3.5 rounded-lg border border-line bg-surface p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-strong hover:shadow-[0_10px_30px_-14px_rgba(0,0,0,0.7)]">
+    <div className="group flex h-[112px] w-[236px] shrink-0 gap-3 rounded-lg border border-line bg-surface p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-strong hover:shadow-[0_10px_30px_-14px_rgba(0,0,0,0.7)]">
       {hit ? (
-        <Avatar src={hit.image_url} name={name} h={100} />
+        <Avatar src={hit.image_url} name={name} h={88} />
       ) : (
-        <Skeleton className="h-[100px] w-[77px] rounded-md" />
+        <Skeleton className="h-[88px] w-[68px] rounded-md" />
       )}
       <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
         <div className="min-w-0">
@@ -285,13 +291,12 @@ function FeatureCard({
   return (
     <motion.div
       initial={reduced ? false : { opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.45, delay: reduced ? 0 : 0.06 * index, ease: EASE }}
-      className="flex items-center justify-between gap-4 rounded-lg border border-line bg-surface p-5"
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: reduced ? 0 : 0.5 + 0.06 * index, ease: EASE }}
+      className="flex items-center justify-between gap-4 rounded-lg border border-line bg-surface p-4"
     >
       <div className="min-w-0">
-        <span className="mb-3 inline-grid h-8 w-8 place-items-center rounded-md border border-accent/25 bg-accent-soft text-accent">
+        <span className="mb-2.5 inline-grid h-8 w-8 place-items-center rounded-md border border-accent/25 bg-accent-soft text-accent">
           {icon}
         </span>
         <div className="font-medium text-ink">{title}</div>
