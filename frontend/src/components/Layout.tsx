@@ -48,7 +48,9 @@ export function Layout() {
       <motion.main
         id="content"
         key={routeKey}
-        className="mx-auto max-w-6xl px-5 py-7"
+        // Home owns its full-bleed hero, so it renders edge-to-edge; every other
+        // route sits in the standard centred content column.
+        className={isHome ? "" : "mx-auto max-w-6xl px-5 py-7"}
         initial={reduced ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.26, ease: [0.23, 1, 0.32, 1] }}
