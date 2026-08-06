@@ -24,10 +24,10 @@ import faiss
 import numpy as np
 import pandas as pd
 import torch
-from torch import nn
-
 from app.db.session import get_engine
 from etl.load.db import log
+from torch import nn
+
 from ml._paths import MODELS_DIR
 from ml.features.scaler import transform as scale_features
 

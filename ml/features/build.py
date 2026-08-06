@@ -15,8 +15,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from sqlalchemy import delete, select
-
 from app.db.models import (
     Player,
     PlayerFeatures,
@@ -24,6 +22,7 @@ from app.db.models import (
 )
 from app.db.session import SessionLocal, get_engine
 from etl.load.db import log
+from sqlalchemy import delete, select
 
 FEATURE_SET_VERSION = "v1"
 

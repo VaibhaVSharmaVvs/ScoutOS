@@ -21,10 +21,10 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
-
 from app.db.session import get_engine
 from etl.load.db import log
+from sklearn.preprocessing import StandardScaler
+
 from ml._paths import ARTIFACTS
 from ml.features.build import FEATURE_SET_VERSION
 

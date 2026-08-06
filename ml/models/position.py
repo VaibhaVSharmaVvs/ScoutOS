@@ -18,12 +18,12 @@ import json
 
 import joblib
 import pandas as pd
+from app.db.session import get_engine
 from catboost import CatBoostClassifier, Pool
+from etl.load.db import log
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 from sklearn.model_selection import GroupShuffleSplit
 
-from app.db.session import get_engine
-from etl.load.db import log
 from ml._paths import MODELS_DIR
 from ml.models.dataset import feature_columns, load_features
 
