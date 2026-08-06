@@ -118,7 +118,9 @@ def _style_vectors(version: str = "v1"):
     all rows, then averaged per player — cheap to reuse across many explanations.
     """
     from app.db.session import get_engine
-    from ml.features.scaler import load as load_scaler, transform
+
+    from ml.features.scaler import load as load_scaler
+    from ml.features.scaler import transform
 
     _, names, _ = load_scaler(version)
     feats = pd.read_sql(

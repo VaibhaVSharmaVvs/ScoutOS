@@ -18,7 +18,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install ruff
+      # pinned so a new ruff release can't silently break CI with added rules
+      - run: pip install ruff==0.16.1
       # only the code we keep clean (generated Alembic migrations & scraping code excluded)
       - run: ruff check backend/app ml/models ml/features
 

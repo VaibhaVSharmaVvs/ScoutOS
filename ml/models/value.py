@@ -17,9 +17,9 @@ import joblib
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+from etl.load.db import log
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-from etl.load.db import log
 from ml._paths import MODELS_DIR
 from ml.models.dataset import feature_columns, load_features, time_split
 

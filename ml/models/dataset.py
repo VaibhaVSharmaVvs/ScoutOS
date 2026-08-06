@@ -8,7 +8,6 @@ avoids leakage (train on earlier seasons, test on the latest).
 from __future__ import annotations
 
 import pandas as pd
-
 from app.db.session import get_engine
 
 ARTIFACT_ROOT = "ml/artifacts"

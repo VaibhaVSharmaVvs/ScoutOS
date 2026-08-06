@@ -18,9 +18,9 @@ import json
 
 import numpy as np
 import pandas as pd
-
 from app.db.session import get_engine
 from etl.load.db import log
+
 from ml._paths import CLUB_FIT_CONFIG
 
 SEASON = "2024-25"

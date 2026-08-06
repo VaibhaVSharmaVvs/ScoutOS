@@ -19,10 +19,10 @@ import joblib
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_absolute_error, r2_score
-
 from app.db.session import get_engine
 from etl.load.db import log
+from sklearn.metrics import mean_absolute_error, r2_score
+
 from ml._paths import MODELS_DIR
 from ml.models.dataset import feature_columns, load_features
 
